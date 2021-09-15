@@ -1,0 +1,3 @@
+bool set_estop
+---
+bool estop_state
