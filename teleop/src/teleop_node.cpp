@@ -12,11 +12,11 @@ class Teleop : public rclcpp::Node
 {
   public:
     Teleop()
-    : Node("teleop")
+    : Node("teleop_node")
     {
       subscription_ = this->create_subscription<sensor_msgs::msg::Joy>(
-      "joy", 10, std::bind(&Teleop::topic_callback, this, _1));
-      publisher_ = this->create_publisher<lgsvl_msgs::msg::VehicleControlData>("lgsvl/vehicle_control_cmd", 10);
+      "/joy/joy", 10, std::bind(&Teleop::topic_callback, this, _1));
+      publisher_ = this->create_publisher<lgsvl_msgs::msg::VehicleControlData>("/lgsvl/vehicle_control_cmd", 10);
     }
 
 
