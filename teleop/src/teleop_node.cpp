@@ -16,7 +16,7 @@ class Teleop : public rclcpp::Node
     {
       subscription_ = this->create_subscription<sensor_msgs::msg::Joy>(
       "joy", 10, std::bind(&Teleop::topic_callback, this, _1));
-      publisher_ = this->create_publisher<lgsvl_msgs::msg::VehicleControlData>("vehicle_cmd", 10);
+      publisher_ = this->create_publisher<lgsvl_msgs::msg::VehicleControlData>("lgsvl/vehicle_control_cmd", 10);
     }
 
 
@@ -24,10 +24,10 @@ class Teleop : public rclcpp::Node
     void topic_callback(const sensor_msgs::msg::Joy::SharedPtr msg) const
     {
       lgsvl_msgs::msg::VehicleControlData vehicle_control;
-      vehicle_control.acceleration_pct = 0.5;
-      vehicle_control.braking_pct = 0.5;
+      vehicle_control.acceleration_pct = (msg->axes[5] < 0 ? 0.5 + (std::abs(msg->axes[5]) / 2) : std::abs(msg->axes[5] - 1) / 2);
+      vehicle_control.braking_pct = (msg->axes[2] < 0 ? 0.5 + (std::abs(msg->axes[2]) / 2) : std::abs(msg->axes[2] - 1) / 2);
       vehicle_control.target_wheel_angle = msg->axes[0] * -1.57;
-      vehicle_control.target_wheel_angular_rate = msg->axes[5] < 0 ? 0.5 + (std::abs(msg->axes[5]) / 2) : std::abs(msg->axes[5] - 1) / 2;
+      vehicle_control.target_wheel_angular_rate = 150;
       vehicle_control.target_gear = 1;
       publisher_->publish(vehicle_control); 
     }
