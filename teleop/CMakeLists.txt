@@ -13,11 +13,11 @@ find_package(joy REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 
-add_executable(teleop src/teleop_node.cpp)
-ament_target_dependencies(teleop rclcpp joy sensor_msgs lgsvl_msgs)
+add_executable(teleop_node src/teleop_node.cpp)
+ament_target_dependencies(teleop_node rclcpp joy sensor_msgs lgsvl_msgs)
 
 install(TARGETS
-  teleop
+  teleop_node
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
