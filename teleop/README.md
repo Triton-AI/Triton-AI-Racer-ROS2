@@ -9,11 +9,11 @@ work with the [lgsvl simulator](https://www.svlsimulator.com/).
 
 ## Subscribed Topics
 
-* joy/joy ([sensor_msgs/Joy](http://docs.ros.org/en/api/sensor_msgs/html/msg/Joy.html))
+* joy/joy ([sensor_msgs/Joy](http://docs.ros.org/en/api/sensor_msgs/html/msg/Joy.html)): reads commands from the joystick using joy package
 
 ## Services
 
-* teleop/estop ([teleop_interfaces/EmergencyStop]): Activates emergency stop, which disables all input and turns the brakes to maximum.
+* teleop/estop [teleop_interfaces/EmergencyStop]: Activates emergency stop, which disables all input and turns the brakes to maximum.
 
 ## Launch File
 
