@@ -3,17 +3,23 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 #include "lgsvl_msgs/msg/vehicle_control_data.hpp"
+#include "teleop_interfaces/srv/emergency_stop.hpp"
 
-using std::placeholders::_1;
 
 using namespace std::chrono_literals;
 
 class Teleop : public rclcpp::Node {
 public:
     Teleop() : Node("teleop_node") {
-        subscription_ = this->create_subscription<sensor_msgs::msg::Joy>(
-            "/joy/joy", 10, std::bind(&Teleop::topic_callback, this, _1));
-        publisher_ = this->create_publisher<lgsvl_msgs::msg::VehicleControlData>("/lgsvl/vehicle_control_cmd", 10);
+
+        // subscribe to joystick and publish to lgsvl
+        subscription = this->create_subscription<sensor_msgs::msg::Joy>(
+            "/joy/joy", 10, std::bind(&Teleop::topic_callback, this, std::placeholders::_1));
+        publisher = this->create_publisher<lgsvl_msgs::msg::VehicleControlData>("/lgsvl/vehicle_control_cmd", 10);
+        
+        // accept the estop service
+        service = this->create_service<teleop_interfaces::srv::EmergencyStop>("estop", 
+            std::bind(&Teleop::toggle_estop, this, std::placeholders::_1, std::placeholders::_2));
 
         // ref: http://docs.ros.org.ros.informatik.uni-freiburg.de/en/galactic/Tutorials/Using-Parameters-In-A-Class-CPP.html
         /*
@@ -26,7 +32,7 @@ public:
         this->declare_parameter("accel", 5);
         this->declare_parameter("braking", 5);
         this->declare_parameter("wheel", 0);
-        this->declare_parameter("estop", 0);
+        this->declare_parameter("estop", 5);
         // this->declare_parameter("drive", 3);
         // this->declare_parameter("parking", 1);
         // this->declare_parameter("reverse", 0);
@@ -45,15 +51,40 @@ public:
     }
 
 private:
+    // int drive, parking, reverse, low; // vars for gears
+    int accel, braking, wheel, target_angular_rate, estop; // control vars
+    bool estop_state = false;
+    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subscription;
+    rclcpp::Publisher<lgsvl_msgs::msg::VehicleControlData>::SharedPtr publisher;
+    rclcpp::Service<teleop_interfaces::srv::EmergencyStop>::SharedPtr service;
+
+    void toggle_estop(const std::shared_ptr<teleop_interfaces::srv::EmergencyStop::Request> request,
+        std::shared_ptr<teleop_interfaces::srv::EmergencyStop::Response> response) {
+        
+        this->estop_state = request->set_estop;
+        response->estop_state = this->estop_state;
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Emergency stop %s", this->estop_state ? "enabled" : "disabled");
+    }
+
     void topic_callback(const sensor_msgs::msg::Joy::SharedPtr msg) const {
         
         lgsvl_msgs::msg::VehicleControlData vehicle_control;
-        vehicle_control.acceleration_pct =  map_linear<double>(1, -1, 0, 1, msg->axes[accel]); 
-        vehicle_control.braking_pct = map_linear<double>(1, -1, 0, 1, msg->axes[braking]);
-        vehicle_control.target_wheel_angle = map_linear<double>(1, -1, - M_PI/2 , M_PI / 2, msg->axes[wheel]);
-        vehicle_control.target_wheel_angular_rate = target_angular_rate;
-        vehicle_control.target_gear = 1 //get_gear(msg);  
-        publisher_->publish(vehicle_control);
+
+        if (msg->buttons[estop] || estop_state) {
+            vehicle_control.acceleration_pct =  0.0;
+            vehicle_control.braking_pct = 1.0;
+            vehicle_control.target_wheel_angle = 0.0;
+            vehicle_control.target_wheel_angular_rate = target_angular_rate;
+            vehicle_control.target_gear = 1; //get_gear(msg); 
+        } else {
+            vehicle_control.acceleration_pct =  map_linear<double>(1, -1, 0, 1, msg->axes[accel]); 
+            vehicle_control.braking_pct = map_linear<double>(1, -1, 0, 1, msg->axes[braking]);
+            vehicle_control.target_wheel_angle = map_linear<double>(1, -1, - M_PI/2 , M_PI / 2, msg->axes[wheel]);
+            vehicle_control.target_wheel_angular_rate = target_angular_rate;
+            vehicle_control.target_gear = 1; //get_gear(msg); 
+        }
+        
+        publisher->publish(vehicle_control);
     }
 
     template <class T>
@@ -73,11 +104,6 @@ private:
     //     }
     //     return 0;
     // }
-
-    int accel, braking, wheel, target_angular_rate, estop; // control vars
-    // int drive, parking, reverse, low; // vars for gears
-    rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subscription_;
-    rclcpp::Publisher<lgsvl_msgs::msg::VehicleControlData>::SharedPtr publisher_;
 };
 
 int main(int argc, char *argv[])
