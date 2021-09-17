@@ -3,7 +3,7 @@
 <package format="3">
   <name>teleop_interfaces</name>
   <version>0.0.0</version>
-  <description>Package description</description>
+  <description>Interface for teleop package</description>
   <maintainer email="tgujar@ucsd.edu">tgujar</maintainer>
   <license>Apache License 2.0</license>
 
