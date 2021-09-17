@@ -37,4 +37,7 @@ You also need to run [lgsvl_bridge](https://github.com/lgsvl/ros2-lgsvl-bridge) 
 * estop (int, default: 5)
   * The button on the joystick which executes an emergengy stop. An emergency stop disables all input and turns the brakes to maximum.
 
+* target_angular_rate (int, default: 150)
+  * Determines the maximum velocity of the vehicle.
+
 The mapping from index values to actual gamepad buttons and axes can be found on the [wiki for the `joy` package](http://wiki.ros.org/joy). 
