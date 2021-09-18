@@ -1,0 +1,21 @@
+/teleop:
+  teleop_node:
+    ros__parameters:
+      # joystick mapping: http://wiki.ros.org/joy
+
+      accel: 5 #axes rt
+      braking: 2 #axes lt
+      wheel: 0 #axes ljoy_x
+      estop: 5 #button rb
+      # drive: 3 #button y
+      # parking: 1 #button b
+      # reverse: 0 #button a
+      # low: 2 #button x
+      target_angular_rate: 150
+
+/joy:
+  joy_node:
+    ros__parameters:
+      sticky_buttons: true # ESTOP will not work if this is changed to false
+
+
