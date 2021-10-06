@@ -1,0 +1,7 @@
+std_msgs/Header header
+
+GNSSWaypoint current_pose
+GNSSWaypoint target_pose
+
+float64 cross_track_error
+float64 heading_error

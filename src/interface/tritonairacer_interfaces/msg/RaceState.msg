@@ -1,0 +1,3 @@
+std_msgs/Header header
+tritonairacer_interfaces/RaceFlag flag
+tritonairacer_interfaces/RaceStage stage

@@ -1,0 +1,19 @@
+/raptor_dbw_interface/get_joy_params_node:
+  ros__parameters:
+    ignore: false
+    enable: true
+    svel: 0.0
+    max_steer_angle: 470.0
+
+/raptor_dbw_interface/get_dbw_params_node:
+  ros__parameters:
+    max_steer_angle: 470.0
+
+/raptor_dbw_interface/joy_node:
+  ros__parameters:
+    device_id: 0
+    device_name: "/dev/input/js0"
+    deadzone: 0.05
+    autorepeat_rate: 20.0
+    sticky_buttons: false
+    coalesce_interval_ms: 1

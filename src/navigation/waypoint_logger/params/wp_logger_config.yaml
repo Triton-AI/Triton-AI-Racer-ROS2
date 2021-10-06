@@ -1,0 +1,11 @@
+/waypoint/log_node:
+  ros__parameters:
+    waypoint_logging_hz: 20
+    default_save_file_name: "waypoints.json"
+
+
+    # Joystick
+    js_toggle_log_button: 0
+    js_terminate_log_button: 1
+    js_get_log_state_button: 2
+    

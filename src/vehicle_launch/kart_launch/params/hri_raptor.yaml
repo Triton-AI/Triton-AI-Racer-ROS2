@@ -1,0 +1,34 @@
+hri_raptor_conversion_node:
+  ros__parameters:
+    input_enable_button: 2
+    output_enable_button: 5
+    input_disable_button: 0
+    output_disable_button: 4
+    input_steering_axis: 0
+    output_steering_axis: 0
+    reverse_steering: false
+    input_throttle_axis: 4
+    output_throttle_axis: 5
+    raptor_brake_axis: 2
+    reverse_throttle: false
+    raptor_button_count: 11
+    raptor_axis_count: 8
+
+/raptor_dbw_interface/get_joy_params_node:
+  ros__parameters:
+  # DBW joystick node
+    ignore: false
+    enable: true
+    svel: 0.0
+  # Shared with DBW CAN node
+    max_steer_angle: 470.0
+
+/raptor_dbw_interface/get_dbw_params_node:
+  ros__parameters:
+    # Shared with DBW Joy node
+    max_steer_angle: 470.0
+
+hri_joystick_node:
+  ros__parameters:
+    serial: /dev/ttyS0
+    frame_id: /joystick

@@ -1,0 +1,50 @@
+/waypoint/car_1_follow:
+  ros__parameters:
+    car_id: 0
+    steering_kp: 1.0
+    steering_ki: 0.5
+    steering_kd: 1.0
+
+    throttle_kp: 1.0
+    throttle_ki: 0.2
+    throttle_kd: 0.5
+
+    waypoint_data_file: "waypoints.json"
+    n_look_ahead: 15
+
+    max_wheel_angle_rad: 0.5
+    wheel_angle_change_rate: 0.5
+
+/waypoint/car_2_follow:
+  ros__parameters:
+    car_id: 0
+    steering_kp: 2.0
+    steering_ki: 0.2
+    steering_kd: 0.8
+
+    throttle_kp: 2.0
+    throttle_ki: 0.2
+    throttle_kd: 0.5
+
+    waypoint_data_file: "waypoints.json"
+    n_look_ahead: 15
+
+    max_wheel_angle_rad: 0.5
+    wheel_angle_change_rate: 0.5
+
+/waypoint/car_3_follow:
+  ros__parameters:
+    car_id: 0
+    steering_kp: 2.0
+    steering_ki: 0.2
+    steering_kd: 0.8
+
+    throttle_kp: 2.0
+    throttle_ki: 0.2
+    throttle_kd: 0.5
+
+    waypoint_data_file: "waypoints.json"
+    n_look_ahead: 15
+
+    max_wheel_angle_rad: 0.5
+    wheel_angle_change_rate: 0.5

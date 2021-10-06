@@ -1,0 +1,28 @@
+GNSSWaypoint[] waypoints
+
+float64 stop_on_deviation 0.0
+# DISABLED = 0.0
+# Non-zero value: maximum cross-track error allowed (m)
+
+int64 start_behavior 0
+# START_FROM_FIRST_WAYPOINT = 0
+# START_FROM_CLOSEST_WAYPOINT = 1
+
+int64 n_look_ahead 20
+# Number of waypoint to look ahead
+# When the number of waypoints left is smaller than {n_look_ahead}:
+#     If end_behavior == STOP or IDILE_THROTTLE: vehicle looks at the last waypoint
+#     Else: vehicle looks at the waypoints to come
+
+int64 end_behavior -1
+# STOP = -1
+# IDILE_THROTTLE = -2
+# Non-negative value: index of the next waypoint to follow
+
+int64 report_interval_ms 100
+---
+
+bool success
+
+---
+WaypointFollowStatus status

@@ -1,0 +1,3 @@
+bool estop_enable true
+---
+bool estop_engaged false
