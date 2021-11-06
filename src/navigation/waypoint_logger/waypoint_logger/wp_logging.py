@@ -23,12 +23,12 @@ class WaypointLogger:
         self.len_ = 0
         self.node_ = node
         # Logged variables
-        self.lat = 0.0
-        self.lon = 0.0
-        self.alt = 0.0
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
         self.speed = 0.0
 
-        self.gnss_lock_ = threading.Lock()
+        self.pos_lock_ = threading.Lock()
         self.speed_lock_ = threading.Lock()
 
 
@@ -75,10 +75,10 @@ class WaypointLogger:
             self.node_.get_logger().warning("Logging cannot be resumed: it has not been started.")
 
 
-    def update_gnss(self, lat:float, lon:float, alt:float):
-        self.gnss_lock_.acquire()
-        self.lat, self.lon, self.alt = lat, lon, alt
-        self.gnss_lock_.release()
+    def update_pose(self, x:float, y:float, z:float):
+        self.pos_lock_.acquire()
+        self.x, self.y, self.z = x, y, z
+        self.pos_lock_.release()
    
 
     def update_speed(self, speed:float):
@@ -87,9 +87,9 @@ class WaypointLogger:
         self.speed_lock_.release()
 
     def get_current_waypoint(self):
-        self.gnss_lock_.acquire()
-        dic = {"lat": self.lat, "lon": self.lon, "alt": self.alt}
-        self.gnss_lock_.release()
+        self.pos_lock_.acquire()
+        dic = {"x": self.x, "y": self.y, "z": self.z}
+        self.pos_lock_.release()
 
         self.speed_lock_.acquire()
         dic["speed"] = self.speed

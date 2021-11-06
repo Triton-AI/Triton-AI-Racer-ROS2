@@ -1,9 +1,10 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import NavSatFix, Joy
-from geometry_msgs.msg import TwistStamped, Twist
+from sensor_msgs.msg import Joy
+from nav_msgs.msg import Odometry
 from waypoint_interfaces.srv import TerminateWaypointLogging, ToggleWaypointLogging, GetWaypointLogState
 from .wp_logging import WaypointLogger, LogState
+from rclpy.qos import qos_profile_sensor_data
 
 import numpy as np
 class WaypointLoggingNode(Node):
@@ -18,8 +19,7 @@ class WaypointLoggingNode(Node):
         self.logger_ = WaypointLogger(self.logging_hz_, self)
 
         # Pubs N' Subs
-        self.gnss_sub_ = self.create_subscription(NavSatFix, "/fix", self.gnss_callback_, 1)
-        self.vel_sub_ = self.create_subscription(TwistStamped, "/vel", self.vel_callback_, 1)
+        self.odom_sub_ = self.create_subscription(Odometry, "odom", self.odom_callback_, qos_profile_sensor_data)
         self.joy_sub_ = self.create_subscription(Joy, "/joy", self.joy_callback_, 1)
 
         # ROS parameters
@@ -41,14 +41,9 @@ class WaypointLoggingNode(Node):
         self.state_terminate_log_button_ = 0
         self.state_get_log_state_button_ = 0
 
-    def gnss_callback_(self, msg:NavSatFix):
-        if np.isnan(msg.altitude):
-            msg.altitude = 0.0
-        self.logger_.update_gnss(msg.latitude, msg.longitude, msg.altitude)
-
-
-    def vel_callback_(self, msg:TwistStamped):
-        self.logger_.update_speed(self.__twist_to_vel(msg.twist))
+    def odom_callback_(self, msg:Odometry):
+        self.logger_.update_pose(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z)
+        self.logger_.update_speed(msg.twist.twist.linear.x)
 
 
     def toggle_log_callback_(self, request:ToggleWaypointLogging.Request, response:ToggleWaypointLogging.Response):
@@ -99,13 +94,6 @@ class WaypointLoggingNode(Node):
                 file_name = custom_file_name
             self.logger_.start_logging(file_name)
         return self.logger_.get_state()
-
-    def __twist_to_vel(self, twist:Twist):
-        lin_vel = np.array([twist.linear.x, twist.linear.y, twist.linear.z], dtype=float)
-        for i in range(len(lin_vel)):
-            if np.isnan(lin_vel[i]):
-                lin_vel[i] = 0.0
-        return np.linalg.norm(lin_vel)
 
 
 

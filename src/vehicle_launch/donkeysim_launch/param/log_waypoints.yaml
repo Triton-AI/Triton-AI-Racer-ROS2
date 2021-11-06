@@ -1,0 +1,23 @@
+/**:
+  ros__parameters:
+    # Waypoint Logger
+    waypoint_logging_hz: 20
+    default_save_file_name: "waypoints.json"
+    js_toggle_log_button: 0
+    js_terminate_log_button: 1
+    js_get_log_state_button: 2
+
+    # Joystick
+    sticky_buttons: true
+
+    # Donkeysim Interface
+    client_config_pkg: 'donkeysim_launch'
+    client_config_file: 'param/donkeysim_client.yaml'
+
+    # JS TAI Interface
+    axis_stick_steering: 0
+    axis_trigger_throttle: 5
+    axis_trigger_brake: 2
+    steering_flipped: true
+    throttle_flipped: true
+    brake_flipped: true
