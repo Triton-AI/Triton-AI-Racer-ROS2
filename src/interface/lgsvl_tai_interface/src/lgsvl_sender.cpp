@@ -6,11 +6,11 @@ namespace lgsvl_tai
         : rclcpp::Node("lgsvl_sender_node", options)
     {
         lgsvl_cmd_pub_ = create_publisher<VehicleControlData>("/lgsvl/vehicle_cmd", 1);
-        tai_cmd_sub_ = create_subscription<TritonAIRacerControl>("/vehicle_cmd", 1, std::bind(&LGSVLSender::tai_callback, this, _1));
+        tai_cmd_sub_ = create_subscription<VehicleControl>("/vehicle_cmd", 1, std::bind(&LGSVLSender::tai_callback, this, _1));
         wheel_angle_rate = declare_parameter<float>("target_wheel_angular_rate", 1.0);
     }
 
-    void LGSVLSender::tai_callback(const TritonAIRacerControl::SharedPtr tai_cmd)
+    void LGSVLSender::tai_callback(const VehicleControl::SharedPtr tai_cmd)
     {
         auto lgsvl_cmd = VehicleControlData();
         lgsvl_cmd.acceleration_pct = tai_cmd->throttle.throttle;

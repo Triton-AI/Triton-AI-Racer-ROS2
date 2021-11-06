@@ -1,34 +1,13 @@
 cmake_minimum_required(VERSION 3.8)
-project(pilot)
+project(tai_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 # find dependencies
-find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
-find_package(tai_interface REQUIRED)
 ament_auto_find_build_dependencies()
-# add_executable(talker src/publisher_member_function.cpp)
-# ament_target_dependencies(talker rclcpp std_msgs)
-
-# add_executable(listener src/subscriber_member_function.cpp)
-# ament_target_dependencies(listener rclcpp std_msgs)
-
-add_executable(pilot_script src/pilot_script.cpp)
-ament_target_dependencies(pilot_script rclcpp std_msgs tai_interface)
-
-install(TARGETS
-  # talker
-  # listener
-  pilot_script
-  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -40,5 +19,19 @@ if(BUILD_TESTING)
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/Brake.msg"
+  "msg/RaceFlag.msg"
+  "msg/RaceStage.msg"
+  "msg/RaceState.msg"
+  "msg/Steer.msg"
+  "msg/Throttle.msg"
+  "msg/VehicleControl.msg"
+  "msg/VehicleOperationMode.msg"
+  "srv/EStop.srv"
+  DEPENDENCIES std_msgs builtin_interfaces
+ )
+
 
 ament_auto_package()

@@ -63,8 +63,8 @@ def generate_launch_description():
             ),
 
             Node(
-                package='raptor_tai_interfaces',
-                executable='raptor_tai_interfaces_node',
+                package='raptor_tai_interface',
+                executable='raptor_tai_interface_node',
                 parameters=[params_file_path],
                 namespace='raptor_tai_interface',
                 remappings=[

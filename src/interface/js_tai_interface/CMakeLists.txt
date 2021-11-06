@@ -1,5 +1,15 @@
-cmake_minimum_required(VERSION 3.8)
-project(base_station)
+cmake_minimum_required(VERSION 3.5)
+project(js_tai_interface)
+
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -10,22 +20,6 @@ find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
-find_package(tai_interface REQUIRED)
-
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-add_executable(base_station_script src/base_station_script.cpp)
-ament_target_dependencies(base_station_script rclcpp std_msgs tai_interface)
-
-
-target_include_directories(base_station_script PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(base_station_script PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-
-install(TARGETS 
-  base_station_script
-  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

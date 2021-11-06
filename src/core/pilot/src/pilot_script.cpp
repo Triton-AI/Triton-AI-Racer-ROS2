@@ -14,26 +14,26 @@
 #include "std_msgs/msg/u_int16.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#include "tritonairacer_interfaces/msg/triton_ai_racer_control.hpp"
-#include "tritonairacer_interfaces/msg/race_state.hpp"
-#include "tritonairacer_interfaces/srv/e_stop.hpp"
+#include "tai_interface/msg/vehicle_control.hpp"
+#include "tai_interface/msg/race_state.hpp"
+#include "tai_interface/srv/e_stop.hpp"
 
 std::mutex mtx;
 
 using namespace std::placeholders;
-using tritonairacer_interfaces::msg::TritonAIRacerControl;
-using tritonairacer_interfaces::srv::EStop;
-using tritonairacer_interfaces::msg::RaceState;
+using tai_interface::msg::VehicleControl;
+using tai_interface::srv::EStop;
+using tai_interface::msg::RaceState;
 
 using namespace std::placeholders;
 
 class Pilot : public rclcpp::Node {
   private:
-	rclcpp::Publisher<TritonAIRacerControl>::SharedPtr pub_control_;
+	rclcpp::Publisher<VehicleControl>::SharedPtr pub_control_;
 
 	rclcpp::Subscription<RaceState>::SharedPtr sub_race_state_;
-	rclcpp::Subscription<TritonAIRacerControl>::SharedPtr sub_manual_vehicle_cmd_;
-	rclcpp::Subscription<TritonAIRacerControl>::SharedPtr sub_autonomous_vehicle_cmd_;
+	rclcpp::Subscription<VehicleControl>::SharedPtr sub_manual_vehicle_cmd_;
+	rclcpp::Subscription<VehicleControl>::SharedPtr sub_autonomous_vehicle_cmd_;
 
 	rclcpp::Service<EStop>::SharedPtr srv_estop_;
 
@@ -45,7 +45,7 @@ class Pilot : public rclcpp::Node {
     std_msgs::msg::UInt16 brake_cmd;
     std_msgs::msg::Int16 steer_cmd;
 
-	TritonAIRacerControl  control_cmd;
+	VehicleControl  control_cmd;
 
 	Pilot() : rclcpp::Node("pilot") {
 		this->throttle_cmd.data = 0;
@@ -55,12 +55,12 @@ class Pilot : public rclcpp::Node {
 		get_parameter("control_publisher_freq", control_publisher_freq);
 
 		// Publishers 
-		this->pub_control_ = create_publisher<TritonAIRacerControl>("vehicle_cmd", 1);
+		this->pub_control_ = create_publisher<VehicleControl>("vehicle_cmd", 1);
 		
 		// Subscribers
 		this->sub_race_state_ = this->create_subscription<RaceState>("/rcs_state", 10, std::bind(&Pilot::receiveRCSState, this, std::placeholders::_1));
-		this->sub_manual_vehicle_cmd_ = this->create_subscription<TritonAIRacerControl>("manual_vehicle_cmd", 10, std::bind(&Pilot::receiveManual, this, std::placeholders::_1));
-		this->sub_autonomous_vehicle_cmd_ = this->create_subscription<TritonAIRacerControl>("autonomous_vehicle_cmd", 10, std::bind(&Pilot::receiveAutonomous, this, std::placeholders::_1));
+		this->sub_manual_vehicle_cmd_ = this->create_subscription<VehicleControl>("manual_vehicle_cmd", 10, std::bind(&Pilot::receiveManual, this, std::placeholders::_1));
+		this->sub_autonomous_vehicle_cmd_ = this->create_subscription<VehicleControl>("autonomous_vehicle_cmd", 10, std::bind(&Pilot::receiveAutonomous, this, std::placeholders::_1));
 
 		//Service 
 		//srv_estop_ = create_service(EStop, std::bind)
@@ -102,13 +102,13 @@ class Pilot : public rclcpp::Node {
 		
 	}
 
-	void receiveManual(const TritonAIRacerControl msg) {
+	void receiveManual(const VehicleControl msg) {
 		mtx.lock();
 		this->control_cmd = msg;
 		mtx.unlock();
 	}  
 
-	void receiveAutonomous(const TritonAIRacerControl msg) {
+	void receiveAutonomous(const VehicleControl msg) {
 		mtx.lock();
 		this->control_cmd = msg;
 		mtx.unlock();

@@ -11,17 +11,17 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "tritonairacer_interfaces/msg/vehicle_mode.hpp"
+#include "tai_interface/msg/vehicle_mode.hpp"
 
 std::mutex mtx; 
 
 using namespace std::placeholders;
-using tritonairacer_interfaces::msg::VehicleMode;
+using tai_interface::msg::VehicleOperationMode;
 
 class BaseStation : public rclcpp::Node {
   private:
 		rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_control_;
-		rclcpp::Publisher<VehicleMode>::SharedPtr pub_vehicle_mode_;
+		rclcpp::Publisher<VehicleOperationMode>::SharedPtr pub_vehicle_mode_;
 
 		rclcpp::TimerBase::SharedPtr control_timer_;
 		rclcpp::TimerBase::SharedPtr vehicle_mode_timer_;
@@ -29,7 +29,7 @@ class BaseStation : public rclcpp::Node {
 		uint32_t control_publisher_freq;
 
 		std::string mode = "manual";
-		VehicleMode vehicle_mode_cmd;
+		VehicleOperationMode vehicle_mode_cmd;
   public:
 	BaseStation() : rclcpp::Node("base_station") {
 
@@ -39,7 +39,7 @@ class BaseStation : public rclcpp::Node {
 		// Publishers 
 		this->pub_control_ = create_publisher<std_msgs::msg::String>("base_station_mode", 1);
 		// TODO
-		this->pub_vehicle_mode_ = create_publisher<VehicleMode>("vehicle_mode", 1);
+		this->pub_vehicle_mode_ = create_publisher<VehicleOperationMode>("vehicle_mode", 1);
 
 		this->control_timer_ = this->create_wall_timer(std::chrono::milliseconds((uint32_t)(1.0 / control_publisher_freq * 1000)), std::bind(&BaseStation::send_control_callback, this));
 		this->vehicle_mode_timer_ = this->create_wall_timer(std::chrono::milliseconds((uint32_t)(1.0 / control_publisher_freq * 1000)), std::bind(&BaseStation::send_vehicle_mode_callback, this));

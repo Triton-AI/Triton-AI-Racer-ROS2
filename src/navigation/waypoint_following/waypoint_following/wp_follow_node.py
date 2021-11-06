@@ -11,7 +11,7 @@ from rclpy.node import Node
 
 from .wp_follow import WaypointFollower, DEFAULT_PID_CONFIG, DEFAULT_WAYPOINT_CONFIG
 from sensor_msgs.msg import NavSatFix, Imu
-from tritonairacer_interfaces.msg import TritonAIRacerControl
+from tai_interface.msg import VehicleControl
 from geometry_msgs.msg import TwistStamped, Twist
 
 
@@ -51,7 +51,7 @@ class WaypointFollowerNode(Node):
             Imu, "/imu/imu_raw", self.imu_callback_, 1)
 
         self.control_pub_ = self.create_publisher(
-            TritonAIRacerControl, "vehicle_cmd", 1)
+            VehicleControl, "vehicle_cmd", 1)
 
         self.telemetry_ = {"lon": 0.0, "lat": 0.0,
                            "alt": 0.0, "speed": 0.0, "heading": 0.0}
@@ -88,7 +88,7 @@ class WaypointFollowerNode(Node):
         self.send_control(str, thr)
 
     def send_control(self, steering, throttle):
-        msg = TritonAIRacerControl()
+        msg = VehicleControl()
         if throttle > 0:
             msg.throttle.throttle = throttle
         else:
