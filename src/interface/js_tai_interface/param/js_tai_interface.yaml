@@ -1,0 +1,8 @@
+/**:
+  ros__parameters:
+    axis_stick_steering: 0
+    axis_trigger_throttle: 5
+    axis_trigger_brake: 2
+    steering_flipped: true
+    throttle_flipped: true
+    brake_flipped: true
