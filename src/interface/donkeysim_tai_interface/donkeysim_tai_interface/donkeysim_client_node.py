@@ -24,6 +24,18 @@ from .donkeysim_client import TelemetryPack, GymInterface, TelemetryInterface
 class DonkeysimClientNode(Node, TelemetryInterface):
     def __init__(self):
         super().__init__("donkeysim_interface_node")
+        self.bridge = cv_bridge.CvBridge()
+
+        self._img_pub = self.create_publisher(
+            Image, 'cam_front', qos_profile_sensor_data)
+        self._lidar_pub = self.create_publisher(
+            PointCloud2, 'lidar', qos_profile_sensor_data)
+        self._imu_pub = self.create_publisher(
+            Imu, 'imu/raw', qos_profile_sensor_data)
+        self._pose_pub = self.create_publisher(
+            PoseWithCovarianceStamped, 'pose', qos_profile_sensor_data)
+        self._odom_pub = self.create_publisher(
+            Odometry, 'odom', qos_profile_sensor_data)
 
         self.declare_parameter('client_config_pkg', 'donkeysim_tai_interface')
         self.declare_parameter('client_config_file',
@@ -38,62 +50,71 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
         with open(client_config_file, 'r') as f:
             client_config = yaml.load(f, Loader=yaml.SafeLoader)
-
         self.gym_interface = GymInterface(
-            debug=self.get_logger().info, config=client_config)
+            debug=self.get_logger().info, config=client_config, tele_callback=self)
+
+        self.steer = 0.0
+        self.throttle = 0.0
+        self.brake = 0.0
 
         ctl_sub_qos = QoSProfile(depth=1)
         ctl_sub_qos.reliability = QoSReliabilityPolicy.RELIABLE
         self._control_sub = self.create_subscription(
             VehicleControl, "vehicle_cmd", self._vehicle_control_callback, ctl_sub_qos)
 
-        self._img_pub = self.create_publisher(
-            Image, 'cam_front', qos_profile_sensor_data)
-        self._lidar_pub = self.create_publisher(
-            PointCloud2, 'lidar', qos_profile_sensor_data)
-        self._imu_pub = self.create_publisher(
-            Imu, 'imu/raw', qos_profile_sensor_data)
-        self._pose_pub = self.create_publisher(
-            PoseWithCovarianceStamped, 'pose', qos_profile_sensor_data)
-        self._odom_pub = self.create_publisher(
-            Odometry, 'odom', qos_profile_sensor_data)
-
-        self.bridge = cv_bridge.CvBridge()
+        self._control_timer = self.create_timer(
+            0.05, self._control_timer_callback)
 
     def image_callback(self, img):
         img_msg = self.bridge.cv2_to_imgmsg(img[..., ::-1])
-        self._img_pub.publish(img_msg)
+        if self._img_pub:
+            self._img_pub.publish(img_msg)
 
     def lidar_callback(self, lidar):
         pass
 
     def telemetry_callback(self, tele: TelemetryPack):
         pose = PoseWithCovarianceStamped()
-        pose.header.stamp = self.get_clock().now()
+        pose.header.stamp = self.get_clock().now().to_msg()
         pose.header.frame_id = 'base_link'
-        pose.pose.pose.position.x = tele.pos_x
-        pose.pose.pose.position.y = tele.pos_y
-        pose.pose.pose.position.z = tele.pos_z
-        w, x, y, z = self.quaternion_from_euler(
-            tele.roll, tele.pitch, tele.yaw)
+        pose.pose.pose.position.x = tele.pos_z
+        pose.pose.pose.position.y = -tele.pos_x
+        pose.pose.pose.position.z = tele.pos_y
+        w, x, y, z = self.quaternion_from_euler(tele.roll, tele.pitch, 360.0 - tele.yaw)
         pose.pose.pose.orientation.x = x
         pose.pose.pose.orientation.y = y
         pose.pose.pose.orientation.z = z
         pose.pose.pose.orientation.w = w
-        self._pose_pub.publish(pose)
+        if self._pose_pub:
+            self._pose_pub.publish(pose)
 
         imu = Imu()
-        imu.header.stamp = self.get_clock().now()
+        imu.header.stamp = self.get_clock().now().to_msg()
         imu.header.frame_id = 'base_link'
-        imu.linear_acceleration.x = tele.accel_x
-        imu.linear_acceleration.y = tele.accel_z
+        imu.linear_acceleration.x = tele.accel_z
+        imu.linear_acceleration.y = -tele.accel_x
         imu.linear_acceleration.z = tele.accel_y
-        self._imu_pub.publish(imu)
+        if self._imu_pub:
+            self._imu_pub.publish(imu)
+
+        odom = Odometry()
+        odom.header.stamp = self.get_clock().now().to_msg()
+        odom.header.frame_id = 'base_link'
+        odom.pose = pose.pose
+        odom.twist.twist.linear.x = tele.vel_z
+        odom.twist.twist.linear.y = -tele.vel_x
+        odom.twist.twist.linear.z = tele.vel_y
+        if self._odom_pub:
+            self._odom_pub.publish(odom)
 
     def _vehicle_control_callback(self, msg: VehicleControl):
         if self.gym_interface.car_loaded:
-            self.gym_interface.send_controls(
-                msg.steering_openloop.steer, msg.throttle.throttle, msg.brake.brake)
+            self.steer = msg.steering_openloop.steer
+            self.throttle = msg.throttle.throttle
+            self.brake = msg.brake.brake
+
+    def _control_timer_callback(self):
+        self.gym_interface.send_controls(self.steer, self.throttle, self.brake)
 
     def quaternion_from_euler(self, roll, pitch, yaw):
         """

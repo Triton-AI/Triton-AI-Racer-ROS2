@@ -16,6 +16,8 @@ def generate_launch_description():
             package='donkeysim_tai_interface',
             executable='donkeysim_client_node',
             name='donkeysim_client_node',
+            output='screen',
+            emulate_tty=True,
             parameters=[
                 donkeysim_client_node_config
             ]           

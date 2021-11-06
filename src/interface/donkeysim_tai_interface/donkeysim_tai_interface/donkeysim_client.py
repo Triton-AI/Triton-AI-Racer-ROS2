@@ -73,6 +73,7 @@ class GymInterface(SDClient):
         self.gym_config.update(self.car_config)
         self.gym_config.update(self.racer_config)
         self.gym_config.update(self.sim_config)
+        self.latency = self.gym_config['artificial_latency']
 
         self.tele_callback = tele_callback
         self.car_loaded = False
@@ -81,7 +82,6 @@ class GymInterface(SDClient):
         self.load_scene(self.gym_config['scene_name'])
         self.send_config()
         self.last_image = None
-        self.latency = self.gym_config['artificial_latency']
 
         self.lidar = None
         self.hsv = [0, 1, 1]
@@ -124,7 +124,6 @@ class GymInterface(SDClient):
             self.debug('Car loaded.')
 
         elif json_packet['msg_type'] == "telemetry":
-            # self.debug(json_packet)
             if self.latency > 0.0:
                 time.sleep(self.latency / 1000.0)
             imgString = json_packet.get("image")
@@ -167,6 +166,9 @@ class GymInterface(SDClient):
                 self.lidar = json_packet["lidar"]
                 if self.tele_callback is not None:
                     self.tele_callback.lidar_callback(self.lidar)
+
+    def on_need_car_config(self):
+        self.send_config()
 
     def send_config(self):
         '''
