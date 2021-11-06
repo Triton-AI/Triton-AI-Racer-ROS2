@@ -36,7 +36,7 @@ namespace tritonai
             };
 
             ctl_pub_ = create_publisher<VehicleControl>("vehicle_cmd", rclcpp::QoS{1});
-            js_sub_ = create_subscription<Joy>("/joy", rclcpp::QoS{5},
+            js_sub_ = create_subscription<Joy>("/joy", rclcpp::QoS{1},
                                                std::bind(&JsTaiInterfaceNode::jsCallback, this, _1));
         }
 
