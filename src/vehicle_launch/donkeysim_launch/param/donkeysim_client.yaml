@@ -1,6 +1,7 @@
 sim_config:
   scene_name: 'circuit_launch'
-  host: '127.0.0.1'
+  host: 'donkey-sim.roboticist.dev'
+  # host: '127.0.0.1'
   port: 9091
   artificial_latency: 0
 
@@ -39,7 +40,7 @@ racer_config:
   guid: 'comeondowntosouthparkandmeetsomefriendsofmine'
 
 car_config:
-  body_style: 'car01'
+  body_style: 'f1'
   body_rgb: [24, 43, 73]
-  car_name: 'Trident'
+  car_name: '#WeRaceAsOne'
   font_size: 50

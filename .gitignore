@@ -437,4 +437,5 @@ AMENT_IGNORE
 
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,pycharm,clion,c++,ros,ros2
 
-waypoints.json
+**waypoints**.json*
+*.csv

@@ -80,7 +80,8 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         pose.pose.pose.position.x = tele.pos_z
         pose.pose.pose.position.y = -tele.pos_x
         pose.pose.pose.position.z = tele.pos_y
-        w, x, y, z = self.quaternion_from_euler(tele.roll, tele.pitch, 360.0 - tele.yaw)
+        w, x, y, z = self.quaternion_from_euler(
+            tele.roll * math.pi / 180, tele.pitch * math.pi / 180, (360.0 - tele.yaw) * math.pi / 180)
         pose.pose.pose.orientation.x = x
         pose.pose.pose.orientation.y = y
         pose.pose.pose.orientation.z = z

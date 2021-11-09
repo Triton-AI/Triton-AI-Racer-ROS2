@@ -44,18 +44,16 @@ class WaypointFollower:
                            setpoint=0.0, output_limits=(-0.1, 1.0), sample_time=0.05)
         self.node_ = node
 
-        self.k_ = 10000
-
         wp_data_path = cfg_waypoint['waypoint_data_file']
         with open(wp_data_path, 'r') as input_file:
             self.wps = json.load(input_file)
 
         self.wp_coords = np.array(
-            [(pt['lat'] * (self.k_), pt['lon'] * (-self.k_)) for pt in self.wps])
+            [(pt['x'], pt['y']) for pt in self.wps])
         # self.wp_headings = np.array([pt['heading'] for pt in self.wps])
         self.wp_speeds = np.array([pt['speed'] for pt in self.wps])
 
-        self.last_nearest_wp_idx = None
+        self.last_nearest_wp_idx = 0
         self.n_look_ahead = cfg_waypoint['n_look_ahead']
 
     def step(self, tele):
@@ -63,7 +61,7 @@ class WaypointFollower:
         if tele is not None:
             speed = tele['speed']
             heading = tele['heading']
-            coord = tele['lat'] * (self.k_), tele['lon'] * (-self.k_)
+            coord = tele['x'], tele['y']
 
             target_heading, target_speed = self.__plan(coord)
             #self.node_.get_logger().info("{:.4f}, {:.4f}, {:d}".format(
@@ -163,7 +161,6 @@ class WaypointFollower:
         else:
             self.last_nearest_wp_idx = self.__efficientFindNearestWaypoint(
                 coord, self.last_nearest_wp_idx)
-
         target_wp_idx = self.__lookAhead(
             self.last_nearest_wp_idx, self.n_look_ahead)[-1]
         target_heading = self.__getTargetHeading(
@@ -176,12 +173,13 @@ class WaypointFollower:
 
         heading_diff = self.__calc_heading_difference(
             current_heading, target_heading)  # in [-180, 180]
-        # print(heading_diff)
+        # print(current_heading, target_heading, heading_diff)
         heading_diff_normalized = heading_diff / 180  # normalize to [-1, 1]
+        if current_speed < 1.0:
+            self.str_pid.reset()
 
         str = self.str_pid(heading_diff_normalized)
-
-        d_spd = current_speed - target_speed
+        d_spd = current_speed - target_speed * 1.05
         thr = self.spd_pid(d_spd)
 
         return str, thr, self

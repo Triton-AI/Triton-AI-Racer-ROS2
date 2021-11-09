@@ -222,7 +222,8 @@ class GymInterface(SDClient):
                "brake": str(braking)}
         self.send_now(json.dumps(msg))
 
-        ''' Would you like some RGB?
+        
+        # Would you like some RGB?
         import colorsys
         self.hsv[0] += 0.005
         if self.hsv[0] > 1 : self.hsv[0] = 0
@@ -235,9 +236,6 @@ class GymInterface(SDClient):
         "car_name" : self.gym_config['car_name'], 
         "font_size" : self.gym_config['font_size'].__str__() }
         self.send_now(json.dumps(msg))
-        '''
-        # this sleep lets the SDClient thread poll our message and send it out.
-        # time.sleep(self.poll_socket_sleep_sec)
 
     def load_scene(self, scene):
         self.debug(f'Loading scene: {scene}')

@@ -8,11 +8,12 @@ from threading import Lock
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
+
+from nav_msgs.msg import Odometry
+from tai_interface.msg import VehicleControl
 
 from .wp_follow import WaypointFollower, DEFAULT_PID_CONFIG, DEFAULT_WAYPOINT_CONFIG
-from sensor_msgs.msg import NavSatFix, Imu
-from tai_interface.msg import VehicleControl
-from geometry_msgs.msg import TwistStamped, Twist
 
 
 class WaypointFollowerNode(Node):
@@ -43,40 +44,28 @@ class WaypointFollowerNode(Node):
 
         self.follower_ = WaypointFollower(
             DEFAULT_PID_CONFIG, DEFAULT_WAYPOINT_CONFIG, self)
-        self.gnss_sub_ = self.create_subscription(
-            NavSatFix, "/fix", self.gnss_callback_, 1)
-        self.vel_sub_ = self.create_subscription(
-            TwistStamped, "/vel", self.vel_callback_, 1)
-        self.imu_sub_ = self.create_subscription(
-            Imu, "/imu/imu_raw", self.imu_callback_, 1)
+        self.odom_sub_ = self.create_subscription(
+            Odometry, "odom", self.odom_callback_, qos_profile_sensor_data)
 
         self.control_pub_ = self.create_publisher(
             VehicleControl, "vehicle_cmd", 1)
 
-        self.telemetry_ = {"lon": 0.0, "lat": 0.0,
-                           "alt": 0.0, "speed": 0.0, "heading": 0.0}
+        self.telemetry_ = {"x": 0.0, "y": 0.0,
+                           "z": 0.0, "speed": 0.0, "heading": 0.0}
         self.tele_lock_ = Lock()
 
         self.step_timer_ = self.create_timer(0.05, self.run)
 
-    def gnss_callback_(self, msg: NavSatFix):
+    def odom_callback_(self, msg: Odometry):
         self.tele_lock_.acquire()
-        self.telemetry_['lon'] = msg.longitude
-        self.telemetry_['lat'] = msg.latitude
-        self.telemetry_['alt'] = msg.altitude
-        self.tele_lock_.release()
-
-    def vel_callback_(self, msg: TwistStamped):
-        self.tele_lock_.acquire()
-        self.telemetry_['speed'] = self.__twist_to_vel(msg.twist)
-        self.tele_lock_.release()
-
-    def imu_callback_(self, msg: Imu):
-        euler = self.euler_from_quaternion(msg.orientation)
+        self.telemetry_['x'] = msg.pose.pose.position.x
+        self.telemetry_['y'] = msg.pose.pose.position.y
+        self.telemetry_['z'] = msg.pose.pose.position.z
+        self.telemetry_['speed'] = msg.twist.twist.linear.x
+        euler = self.euler_from_quaternion(msg.pose.pose.orientation)
         heading = np.degrees(euler[2])
         if heading < 0:
             heading = 360 + heading
-        self.tele_lock_.acquire()
         self.telemetry_['heading'] = heading
         self.tele_lock_.release()
 
@@ -93,18 +82,13 @@ class WaypointFollowerNode(Node):
             msg.throttle.throttle = throttle
         else:
             msg.brake.brake = -throttle
-        msg.steering_rad.steer = self.map_steering(steering)
+        steering_val = self.map_steering(steering)
+        msg.steering_openloop.steer = steering_val
+        msg.steering_rad.steer = steering_val
         self.control_pub_.publish(msg)
 
     def map_steering(self, steering):
-        return steering * self.max_wheel_angle_rad * -1
-
-    def __twist_to_vel(self, twist:Twist):
-        lin_vel = np.array([twist.linear.x, twist.linear.y, twist.linear.z], dtype=float)
-        for i in range(len(lin_vel)):
-            if np.isnan(lin_vel[i]):
-                lin_vel[i] = 0.0
-        return np.linalg.norm(lin_vel)
+        return steering * self.max_wheel_angle_rad
 
     @abstractmethod
     def euler_from_quaternion(self, quaternion):
