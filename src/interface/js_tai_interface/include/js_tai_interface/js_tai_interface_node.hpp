@@ -4,9 +4,9 @@
  * @brief Convert joystick message to TritonAIRacer control message
  * @version 0.1
  * @date 2021-11-06
- * 
+ *
  * @copyright Copyright (c) 2021 [Triton AI]
- * 
+ *
  */
 
 #ifndef JS_TAI_INTERFACE__JS_TAI_INTERFACE_NODE_HPP_
@@ -19,37 +19,37 @@
 
 namespace tritonai
 {
-    namespace interface
-    {
-        using sensor_msgs::msg::Joy;
-        using tai_interface::msg::VehicleControl;
+namespace interface
+{
+using sensor_msgs::msg::Joy;
+using tai_interface::msg::VehicleControl;
 
-        struct JsConfig
-        {
-            int64_t axis_stick_steering;
-            int64_t axis_trigger_throttle;
-            int64_t axis_trigger_brake;
+struct JsConfig
+{
+  int64_t axis_stick_steering;
+  int64_t axis_trigger_throttle;
+  int64_t axis_trigger_brake;
 
-            bool steering_flipped;
-            bool throttle_flipped;
-            bool brake_flipped;
-        };
+  bool steering_flipped;
+  bool throttle_flipped;
+  bool brake_flipped;
+};
 
-        class JsTaiInterfaceNode : public rclcpp::Node
-        {
-        public:
-            explicit JsTaiInterfaceNode(const rclcpp::NodeOptions &options);
+class JsTaiInterfaceNode : public rclcpp::Node
+{
+public:
+  explicit JsTaiInterfaceNode(const rclcpp::NodeOptions & options);
 
-        private:
-            rclcpp::Subscription<Joy>::SharedPtr js_sub_;
-            rclcpp::Publisher<VehicleControl>::SharedPtr ctl_pub_;
-            JsConfig js_config_;
+private:
+  rclcpp::Subscription<Joy>::SharedPtr js_sub_;
+  rclcpp::Publisher<VehicleControl>::SharedPtr ctl_pub_;
+  JsConfig js_config_;
 
-            void jsCallback(const Joy::SharedPtr joy);
-            double map_paddel(const double &js_val, const bool &flipped);
-            double map_steer(const double &js_val, const bool &flipped);
-        };
-    }
+  void jsCallback(const Joy::SharedPtr joy);
+  double map_paddel(const double & js_val, const bool & flipped);
+  double map_steer(const double & js_val, const bool & flipped);
+};
+}
 }
 
 #endif // JS_TAI_INTERFACE__JS_TAI_INTERFACE_NODE_HPP_

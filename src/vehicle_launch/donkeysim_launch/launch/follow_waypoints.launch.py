@@ -32,7 +32,7 @@ def generate_launch_description():
             emulate_tty=True,
             parameters=[
                 config
-            ]           
+            ]
         )
 
     ])

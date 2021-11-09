@@ -48,13 +48,17 @@ class TelemetryPack:
     def __str__(self) -> str:
         return json.dumps(self.__dict__)
 
+
 class TelemetryInterface:
     def image_callback(self, img):
         pass
+
     def lidar_callback(self, lidar):
         pass
-    def telemetry_callback(self, tele:TelemetryPack):
+
+    def telemetry_callback(self, tele: TelemetryPack):
         pass
+
 
 class GymInterface(SDClient):
     '''Talking to the donkey gym'''
@@ -178,7 +182,8 @@ class GymInterface(SDClient):
         self.debug('Sending racer info')
         # Racer info
         msg = {'msg_type': 'racer_info'}
-        msg.update({str(key): str(val) for key, val in self.racer_config.items()})
+        msg.update({str(key): str(val)
+                   for key, val in self.racer_config.items()})
         self.send_now(json.dumps(msg))
 
         time.sleep(1.0)
@@ -200,7 +205,8 @@ class GymInterface(SDClient):
         if self.cam_config.get('enabled'):
             self.debug('Sending camera config')
             msg = {"msg_type": "cam_config"}
-            msg.update({str(key): str(val) for key, val in self.gym_config.items()})
+            msg.update({str(key): str(val)
+                       for key, val in self.gym_config.items()})
             self.send_now(json.dumps(msg))
             self.debug(
                 f"Gym Interface: Camera resolution ({self.gym_config['img_w']}, {self.gym_config['img_h']}).")
@@ -208,7 +214,8 @@ class GymInterface(SDClient):
         if self.lidar_config['enabled']:
             self.debug('Sending LiDAR config')
             msg = {'msg_type': "lidar_config"}
-            msg.update({str(key): str(val) for key, val in self.lidar_config.items()})
+            msg.update({str(key): str(val)
+                       for key, val in self.lidar_config.items()})
             self.send_now(json.dumps(msg))
 
         time.sleep(1.0)
@@ -222,19 +229,19 @@ class GymInterface(SDClient):
                "brake": str(braking)}
         self.send_now(json.dumps(msg))
 
-        
         # Would you like some RGB?
         import colorsys
         self.hsv[0] += 0.005
-        if self.hsv[0] > 1 : self.hsv[0] = 0
+        if self.hsv[0] > 1:
+            self.hsv[0] = 0
         rgb = colorsys.hsv_to_rgb(*(tuple(self.hsv)))
-        msg = { "msg_type" : "car_config",  
-        "body_r" : int(rgb[0] * 255).__str__(), 
-        "body_g" : int(rgb[1] * 255).__str__(), 
-        "body_b" : int(rgb[2] * 255).__str__(),
-        "body_style" : self.gym_config['body_style'], 
-        "car_name" : self.gym_config['car_name'], 
-        "font_size" : self.gym_config['font_size'].__str__() }
+        msg = {"msg_type": "car_config",
+               "body_r": int(rgb[0] * 255).__str__(),
+               "body_g": int(rgb[1] * 255).__str__(),
+               "body_b": int(rgb[2] * 255).__str__(),
+               "body_style": self.gym_config['body_style'],
+               "car_name": self.gym_config['car_name'],
+               "font_size": self.gym_config['font_size'].__str__()}
         self.send_now(json.dumps(msg))
 
     def load_scene(self, scene):
@@ -242,7 +249,6 @@ class GymInterface(SDClient):
         msg = {"msg_type": "load_scene", "scene_name": scene}
         self.send_now(json.dumps(msg))
         time.sleep(2.0)
-        
 
     def reset_car(self):
         self.debug('Resetting car...')

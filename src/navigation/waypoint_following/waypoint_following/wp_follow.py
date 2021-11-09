@@ -32,7 +32,7 @@ class WaypointFollower:
     PID Pilot Mark II. This class does not require the track to be non-self-intersecting.
     """
 
-    def __init__(self, cfg_pid, cfg_waypoint, node:Node):
+    def __init__(self, cfg_pid, cfg_waypoint, node: Node):
         str_cfg = cfg_pid['steering']
         spd_cfg = cfg_pid['throttle']
 
@@ -64,7 +64,7 @@ class WaypointFollower:
             coord = tele['x'], tele['y']
 
             target_heading, target_speed = self.__plan(coord)
-            #self.node_.get_logger().info("{:.4f}, {:.4f}, {:d}".format(
+            # self.node_.get_logger().info("{:.4f}, {:.4f}, {:d}".format(
             #    target_heading, heading, self.last_nearest_wp_idx))
             return self.__act(heading, target_heading, speed, target_speed)
         return 0.0, 0.0, self
