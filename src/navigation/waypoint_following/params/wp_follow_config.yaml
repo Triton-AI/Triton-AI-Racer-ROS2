@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    car_id: 0
+    steering_kp: 2.0
+    steering_ki: 0.2
+    steering_kd: 1.0
+
+    throttle_kp: 2.0
+    throttle_ki: 0.2
+    throttle_kd: 1.0
+
+    waypoint_data_file: "waypoints.json"
+    n_look_ahead: 15
+
+    max_wheel_angle_rad: 0.5
+    wheel_angle_change_rate: 0.5

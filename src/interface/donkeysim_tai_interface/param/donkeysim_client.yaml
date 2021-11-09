@@ -1,0 +1,45 @@
+sim_config:
+  scene_name: 'circuit_launch'
+  host: '127.0.0.1'
+  port: 9091
+  artificial_latency: 0
+
+cam_config:
+  enabled: true
+  fov: 0
+  fish_eye_x: 0.0
+  fish_eye_y: 0.0
+  img_w: 160
+  img_h: 120
+  img_d: 3
+  img_enc: 'JPG'
+  offset_x: 0
+  offset_y: 0
+  offset_z: 0
+  rot_x: 0
+  rot_y": 0
+
+lidar_config:
+  enabled: false
+  degPerSweepInc: 1
+  degAngDown: 0 
+  degAngDelta: 0 
+  numSweepsLevels: 1 
+  maxRange: 50.0 
+  noise: 0 
+  offset_x: 0 
+  offset_y: 0 
+  offset_z: 0 
+  rot_x: 0
+
+racer_config:
+  racer_name: 'Triton Racer'
+  bio: 'Triton-AI'
+  country: 'US'
+  guid: 'comeondowntosouthparkandmeetsomefriendsofmine'
+
+car_config:
+  body_style: 'car01'
+  body_rgb: [24, 43, 73]
+  car_name: 'Trident'
+  font_size: 50

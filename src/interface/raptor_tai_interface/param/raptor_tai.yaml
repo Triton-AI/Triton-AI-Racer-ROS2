@@ -1,0 +1,6 @@
+raptor_tai_interface_node:
+  ros__parameters:
+    tai_cmd_to_raptor_cmd: true
+    raptor_cmd_to_tai_cmd: true
+    tai_cmd_freq: 20
+    tai_cmd_timeout_s: 0.2

@@ -1,0 +1,26 @@
+hri_raptor_conversion_node:
+  ros__parameters:
+    input_enable_button: 2
+    output_enable_button: 5
+    input_disable_button: 0
+    output_disable_button: 4
+    input_left_emergency_button: 0
+    output_left_emergency_button: 0
+    input_right_emergency_button: 0
+    output_right_emergency_button: 0
+    input_steering_axis: 0
+    output_steering_axis: 0
+    reverse_steering: true
+    input_throttle_axis: 4
+    output_throttle_axis: 5
+    input_brake_axis: 4
+    output_brake_axis: 2
+    reverse_throttle: false
+    raptor_button_count: 11
+    raptor_axis_count: 8
+    brake_threshold: 0.0
+    throttle_threshold: 0.0
+    throttle_scale: 1.0
+    steering_scale: 1.0
+    brake_scale: 1.0
+    throttle_brake_same_axis: true # still need to set the input axes for throttle and brake
