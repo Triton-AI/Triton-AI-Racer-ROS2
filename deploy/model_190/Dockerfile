@@ -9,3 +9,14 @@ RUN echo 'source /opt/ros/galactic/setup.bash' >> ~/.bashrc
 
 # Realsense
 RUN apt-get install -y ros-$ROS_DISTRO-realsense2-camera
+
+# LD06 LiDAR, Sparkfun Artemis IMU
+RUN git clone git@github.com:linorobot/ldlidar.git && \ 
+    git clone git@github.com:klintan/ros2_razor_imu.git
+
+# Build
+WORKDIR /root/ros2_ws
+RUN colcon build
+
+# Done
+RUN echo 'source /root/ros2_ws/install/setup.bash' >> ~/.bashrc
