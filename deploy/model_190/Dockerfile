@@ -13,7 +13,7 @@ RUN apt-get install -y ros-$ROS_DISTRO-realsense2-camera
 
 # LD06 LiDAR, Sparkfun Artemis IMU
 RUN git clone -b ros2 https://github.com/linorobot/ldlidar.git && \ 
-    git clone -b ros2 https://github.com/klintan/ros2_razor_imu.git
+    git clone -b ros2 https://github.com/pokusew/ros2_razor_imu.git
 
 # Build
 WORKDIR /root/ros2_ws
