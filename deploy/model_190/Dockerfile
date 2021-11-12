@@ -11,9 +11,13 @@ RUN echo 'source /opt/ros/galactic/setup.bash' >> ~/.bashrc
 # Realsense
 RUN apt-get install -y ros-$ROS_DISTRO-realsense2-camera
 
+# Python
+RUN apt install python3-pip -y
+RUN pip install pyserial transforms3d
+
 # LD06 LiDAR, Sparkfun Artemis IMU
 RUN git clone -b ros2 https://github.com/linorobot/ldlidar.git && \ 
-    git clone -b ros2 https://github.com/pokusew/ros2_razor_imu.git
+    git clone -b ros2 https://github.com/Triton-AI/ros2_razor_imu.git
 
 # Build
 WORKDIR /root/ros2_ws
