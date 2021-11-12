@@ -1,0 +1,1 @@
+docker exec -it tai-racer-ros2-190 bash
