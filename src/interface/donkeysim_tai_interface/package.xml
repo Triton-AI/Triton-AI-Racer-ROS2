@@ -8,6 +8,10 @@
   <license>TODO: License declaration</license>
 
   <depend>tai_interface</depend>
+  <depend>python-numpy</depend>
+  <depend>python-opencv</depend>
+  <depend>cv_bridge</depend>
+  <depend>python-transforms3d-pip</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

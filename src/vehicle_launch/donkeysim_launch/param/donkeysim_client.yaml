@@ -1,6 +1,6 @@
 sim_config:
   scene_name: 'circuit_launch'
-  host: 'donkey-sim.roboticist.dev'
+  host: '192.168.0.114'
   # host: '127.0.0.1'
   port: 9091
   artificial_latency: 0

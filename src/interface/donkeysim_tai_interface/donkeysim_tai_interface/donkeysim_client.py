@@ -49,11 +49,19 @@ class TelemetryPack:
         return json.dumps(self.__dict__)
 
 
+class LidarConfig:
+    def __init__(self, degPerSweepInc=1, degAngDown=0, degAngDelta=3, numSweepsLevels=1) -> None:
+        self.deg_per_sweep_inc = degPerSweepInc
+        self.deg_ang_down = degAngDown
+        self.deg_ang_delta = degAngDelta
+        self.num_sweep_levels = numSweepsLevels
+
+
 class TelemetryInterface:
     def image_callback(self, img):
         pass
 
-    def lidar_callback(self, lidar):
+    def lidar_callback(self, lidar:list, lidar_config:LidarConfig):
         pass
 
     def telemetry_callback(self, tele: TelemetryPack):
@@ -71,6 +79,13 @@ class GymInterface(SDClient):
         self.car_config = config['car_config']
         self.sim_config = config['sim_config']
 
+        self.ros_lidar_config = LidarConfig(
+            self.lidar_config['degPerSweepInc'],
+            self.lidar_config['degAngDown'],
+            self.lidar_config['degAngDelta'],
+            self.lidar_config['numSweepsLevels'],
+        )
+
         self.gym_config = {}
         self.gym_config.update(self.lidar_config)
         self.gym_config.update(self.cam_config)
@@ -81,8 +96,12 @@ class GymInterface(SDClient):
 
         self.tele_callback = tele_callback
         self.car_loaded = False
+        host = self.gym_config['host']
+        port = self.gym_config['port']
+        self.debug(f"Connecting to {host}:{port}")
         SDClient.__init__(
             self, self.gym_config['host'], self.gym_config['port'], poll_socket_sleep_time=poll_socket_sleep_time)
+        self.debug("Server connected")
         self.load_scene(self.gym_config['scene_name'])
         self.send_config()
         self.last_image = None
@@ -116,7 +135,10 @@ class GymInterface(SDClient):
     def __try_get(self, dict, key, type_required):
         try:
             val = dict.get(key)
-            return type_required(val)
+            if val != 'none':
+                return type_required(val)
+            else:
+                return None
         except:
             return None
 
@@ -169,7 +191,7 @@ class GymInterface(SDClient):
             if "lidar" in json_packet:
                 self.lidar = json_packet["lidar"]
                 if self.tele_callback is not None:
-                    self.tele_callback.lidar_callback(self.lidar)
+                    self.tele_callback.lidar_callback(self.lidar, self.ros_lidar_config)
 
     def on_need_car_config(self):
         self.send_config()
@@ -212,6 +234,7 @@ class GymInterface(SDClient):
                 f"Gym Interface: Camera resolution ({self.gym_config['img_w']}, {self.gym_config['img_h']}).")
 
         if self.lidar_config['enabled']:
+            self.check_lidar_config_validity()
             self.debug('Sending LiDAR config')
             msg = {'msg_type': "lidar_config"}
             msg.update({str(key): str(val)
@@ -230,19 +253,20 @@ class GymInterface(SDClient):
         self.send_now(json.dumps(msg))
 
         # Would you like some RGB?
-        import colorsys
-        self.hsv[0] += 0.005
-        if self.hsv[0] > 1:
-            self.hsv[0] = 0
-        rgb = colorsys.hsv_to_rgb(*(tuple(self.hsv)))
-        msg = {"msg_type": "car_config",
-               "body_r": int(rgb[0] * 255).__str__(),
-               "body_g": int(rgb[1] * 255).__str__(),
-               "body_b": int(rgb[2] * 255).__str__(),
-               "body_style": self.gym_config['body_style'],
-               "car_name": self.gym_config['car_name'],
-               "font_size": self.gym_config['font_size'].__str__()}
-        self.send_now(json.dumps(msg))
+        if self.car_config['fluid_rgb']:
+            import colorsys
+            self.hsv[0] += 0.005
+            if self.hsv[0] > 1:
+                self.hsv[0] = 0
+            rgb = colorsys.hsv_to_rgb(*(tuple(self.hsv)))
+            msg = {"msg_type": "car_config",
+                "body_r": int(rgb[0] * 255).__str__(),
+                "body_g": int(rgb[1] * 255).__str__(),
+                "body_b": int(rgb[2] * 255).__str__(),
+                "body_style": self.gym_config['body_style'],
+                "car_name": self.gym_config['car_name'],
+                "font_size": self.gym_config['font_size'].__str__()}
+            self.send_now(json.dumps(msg))
 
     def load_scene(self, scene):
         self.debug(f'Loading scene: {scene}')
@@ -270,3 +294,12 @@ class GymInterface(SDClient):
             'Qw': str(q_w)
         }
         self.send(json.dumps(msg))
+
+    def check_lidar_config_validity(self):
+        assert self.lidar_config['degPerSweepInc'] > 0
+        assert self.lidar_config['numSweepsLevels'] > 0
+        assert self.lidar_config['maxRange'] > 0
+        assert 0 <= self.lidar_config['degAngDown'] < 90
+        if self.lidar_config['numSweepsLevels'] > 1:
+            assert self.lidar_config['degAngDelta'] > 0
+            assert -90 < self.lidar_config['degAngDown'] + self.lidar_config['degAngDelta'] * self.lidar_config['numSweepsLevels'] < 90
