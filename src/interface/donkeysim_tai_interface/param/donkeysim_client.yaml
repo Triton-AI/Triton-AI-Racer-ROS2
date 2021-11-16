@@ -1,6 +1,6 @@
 sim_config:
   scene_name: 'circuit_launch'
-  host: '127.0.0.1'
+  host: '192.168.0.114'
   port: 9091
   artificial_latency: 0
 
@@ -20,10 +20,10 @@ cam_config:
   rot_y": 0
 
 lidar_config:
-  enabled: false
+  enabled: true
   degPerSweepInc: 1
   degAngDown: 0 
-  degAngDelta: 0 
+  degAngDelta: 3 
   numSweepsLevels: 1 
   maxRange: 50.0 
   noise: 0 

@@ -4,22 +4,40 @@ Interface between Donkeysim and TritonAIRacer
 import os
 import yaml
 import math
+import ctypes
+import multiprocessing
+from multiprocessing import sharedctypes
+
+import numpy as np
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, qos_profile_sensor_data
 from ament_index_python.packages import get_package_share_directory
 import cv_bridge
-
-from sensor_msgs.msg import PointCloud2, Image, Imu
+from sensor_msgs.msg import PointCloud2, Image, Imu, PointField
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
 
 from tai_interface.msg import VehicleControl
 
 
-from .donkeysim_client import TelemetryPack, GymInterface, TelemetryInterface
+from .donkeysim_client import LidarConfig, TelemetryPack, GymInterface, TelemetryInterface
 
+LIDAR_CONFIG = None
+LIDAR_DATA = None
+
+def process_lidar_point(lidar_point:dict):
+    dist = lidar_point['d']
+    x_deg = lidar_point['rx']
+    y_deg = lidar_point['ry']
+    indices =  (y_deg // LIDAR_CONFIG.deg_ang_delta, x_deg // LIDAR_CONFIG.deg_per_sweep_inc)
+
+    x, y, z = polar2cart(dist, y_deg + 90, x_deg)
+    LIDAR_DATA[indices[0]][indices[1]][0] = x
+    LIDAR_DATA[indices[0]][indices[1]][1] = y
+    LIDAR_DATA[indices[0]][indices[1]][2] = z
+    LIDAR_DATA[indices[0]][indices[1]][3] = 1
 
 class DonkeysimClientNode(Node, TelemetryInterface):
     def __init__(self):
@@ -27,7 +45,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         self.bridge = cv_bridge.CvBridge()
 
         self._img_pub = self.create_publisher(
-            Image, 'cam_front', qos_profile_sensor_data)
+            Image, 'cam/front', qos_profile_sensor_data)
         self._lidar_pub = self.create_publisher(
             PointCloud2, 'lidar', qos_profile_sensor_data)
         self._imu_pub = self.create_publisher(
@@ -67,11 +85,41 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
     def image_callback(self, img):
         img_msg = self.bridge.cv2_to_imgmsg(img[..., ::-1])
+        img_msg.header.frame_id = 'cam_front_link'
         if self._img_pub:
             self._img_pub.publish(img_msg)
 
-    def lidar_callback(self, lidar):
-        pass
+    def lidar_callback(self, lidar:list, lidar_config:LidarConfig):
+        global LIDAR_CONFIG
+        global LIDAR_DATA
+        lidar_msg = PointCloud2()
+        lidar_msg.header.frame_id = "lidar_link"
+        lidar_msg.header.stamp = self.get_clock().now().to_msg()
+
+        lidar_msg.height = lidar_config.num_sweep_levels
+        lidar_msg.width = 360 // lidar_config.deg_per_sweep_inc
+
+        field_names = ('x', 'y', 'z', 'intensity')
+        for i in range(4):
+            field = PointField()
+            field.name = field_names[i]
+            field.offset = 4 * (i)
+            field.datatype = PointField.FLOAT32
+            field.count = 1
+            lidar_msg.fields.append(field)
+        lidar_msg.is_bigendian = False
+        lidar_msg.point_step = 16
+        lidar_msg.row_step = lidar_msg.point_step * lidar_msg.width
+        lidar_msg.is_dense = False
+        LIDAR_CONFIG = lidar_config
+        LIDAR_DATA = sharedctypes.RawArray(lidar_msg.width * (4 * ctypes.c_float), np.ctypeslib.as_ctypes(np.zeros((lidar_msg.height, lidar_msg.width, 4), dtype=np.float32)))
+        with multiprocessing.Pool() as p:
+            p.map(process_lidar_point, lidar)
+        lidar_msg.data = np.ctypeslib.as_array(LIDAR_DATA).flatten().tostring()
+        self._lidar_pub.publish(lidar_msg)
+
+
+        
 
     def telemetry_callback(self, tele: TelemetryPack):
         pose = PoseWithCovarianceStamped()
@@ -137,6 +185,16 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         q[3] = sy * cp * cr - cy * sp * sr
 
         return q
+
+        
+def polar2cart(r, theta, phi):
+    theta = math.radians(theta)
+    phi = math.radians(phi)
+    return (
+        r * math.sin(theta) * math.cos(phi),
+        r * math.sin(theta) * math.sin(phi),
+        r * math.cos(theta)
+    )
 
 
 def main(args=None):
