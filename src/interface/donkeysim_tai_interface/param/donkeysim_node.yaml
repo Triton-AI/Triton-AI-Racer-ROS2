@@ -2,3 +2,4 @@
   ros__parameters:
     client_config_pkg: 'donkeysim_tai_interface'
     client_config_file: 'param/donkeysim_client.yaml'
+    send_control_interval_ms: 50

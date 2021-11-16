@@ -253,19 +253,20 @@ class GymInterface(SDClient):
         self.send_now(json.dumps(msg))
 
         # Would you like some RGB?
-        import colorsys
-        self.hsv[0] += 0.005
-        if self.hsv[0] > 1:
-            self.hsv[0] = 0
-        rgb = colorsys.hsv_to_rgb(*(tuple(self.hsv)))
-        msg = {"msg_type": "car_config",
-               "body_r": int(rgb[0] * 255).__str__(),
-               "body_g": int(rgb[1] * 255).__str__(),
-               "body_b": int(rgb[2] * 255).__str__(),
-               "body_style": self.gym_config['body_style'],
-               "car_name": self.gym_config['car_name'],
-               "font_size": self.gym_config['font_size'].__str__()}
-        self.send_now(json.dumps(msg))
+        if self.car_config['fluid_rgb']:
+            import colorsys
+            self.hsv[0] += 0.005
+            if self.hsv[0] > 1:
+                self.hsv[0] = 0
+            rgb = colorsys.hsv_to_rgb(*(tuple(self.hsv)))
+            msg = {"msg_type": "car_config",
+                "body_r": int(rgb[0] * 255).__str__(),
+                "body_g": int(rgb[1] * 255).__str__(),
+                "body_b": int(rgb[2] * 255).__str__(),
+                "body_style": self.gym_config['body_style'],
+                "car_name": self.gym_config['car_name'],
+                "font_size": self.gym_config['font_size'].__str__()}
+            self.send_now(json.dumps(msg))
 
     def load_scene(self, scene):
         self.debug(f'Loading scene: {scene}')

@@ -27,17 +27,20 @@ from .donkeysim_client import LidarConfig, TelemetryPack, GymInterface, Telemetr
 LIDAR_CONFIG = None
 LIDAR_DATA = None
 
-def process_lidar_point(lidar_point:dict):
+
+def process_lidar_point(lidar_point: dict):
     dist = lidar_point['d']
     x_deg = lidar_point['rx']
     y_deg = lidar_point['ry']
-    indices =  (y_deg // LIDAR_CONFIG.deg_ang_delta, x_deg // LIDAR_CONFIG.deg_per_sweep_inc)
+    indices = (y_deg // LIDAR_CONFIG.deg_ang_delta,
+               x_deg // LIDAR_CONFIG.deg_per_sweep_inc)
 
     x, y, z = polar2cart(dist, y_deg + 90, x_deg)
     LIDAR_DATA[indices[0]][indices[1]][0] = x
     LIDAR_DATA[indices[0]][indices[1]][1] = y
     LIDAR_DATA[indices[0]][indices[1]][2] = z
     LIDAR_DATA[indices[0]][indices[1]][3] = 1
+
 
 class DonkeysimClientNode(Node, TelemetryInterface):
     def __init__(self):
@@ -58,6 +61,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         self.declare_parameter('client_config_pkg', 'donkeysim_tai_interface')
         self.declare_parameter('client_config_file',
                                'param/donkeysim_client.yaml')
+        self.declare_parameter('send_control_interval_ms', 0.05)
 
         client_config_file = os.path.join(
             get_package_share_directory(self.get_parameter(
@@ -81,7 +85,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
             VehicleControl, "vehicle_cmd", self._vehicle_control_callback, ctl_sub_qos)
 
         self._control_timer = self.create_timer(
-            0.05, self._control_timer_callback)
+            self.get_parameter('send_control_interval_ms').get_parameter_value().integer_value / 1000, self._control_timer_callback)
 
     def image_callback(self, img):
         img_msg = self.bridge.cv2_to_imgmsg(img[..., ::-1])
@@ -89,7 +93,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         if self._img_pub:
             self._img_pub.publish(img_msg)
 
-    def lidar_callback(self, lidar:list, lidar_config:LidarConfig):
+    def lidar_callback(self, lidar: list, lidar_config: LidarConfig):
         global LIDAR_CONFIG
         global LIDAR_DATA
         lidar_msg = PointCloud2()
@@ -112,14 +116,12 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         lidar_msg.row_step = lidar_msg.point_step * lidar_msg.width
         lidar_msg.is_dense = False
         LIDAR_CONFIG = lidar_config
-        LIDAR_DATA = sharedctypes.RawArray(lidar_msg.width * (4 * ctypes.c_float), np.ctypeslib.as_ctypes(np.zeros((lidar_msg.height, lidar_msg.width, 4), dtype=np.float32)))
+        LIDAR_DATA = sharedctypes.RawArray(lidar_msg.width * (4 * ctypes.c_float), np.ctypeslib.as_ctypes(
+            np.zeros((lidar_msg.height, lidar_msg.width, 4), dtype=np.float32)))
         with multiprocessing.Pool() as p:
             p.map(process_lidar_point, lidar)
         lidar_msg.data = np.ctypeslib.as_array(LIDAR_DATA).flatten().tostring()
         self._lidar_pub.publish(lidar_msg)
-
-
-        
 
     def telemetry_callback(self, tele: TelemetryPack):
         pose = PoseWithCovarianceStamped()
@@ -186,7 +188,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
         return q
 
-        
+
 def polar2cart(r, theta, phi):
     theta = math.radians(theta)
     phi = math.radians(phi)
