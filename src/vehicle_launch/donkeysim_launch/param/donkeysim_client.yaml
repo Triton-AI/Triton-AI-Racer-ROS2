@@ -1,7 +1,6 @@
 sim_config:
   scene_name: 'circuit_launch'
-  host: '192.168.0.114'
-  # host: '127.0.0.1'
+  host: '127.0.0.1'
   port: 9091
   artificial_latency: 0
 
@@ -21,15 +20,15 @@ cam_config:
   rot_y": 0
 
 lidar_config:
-  enabled: false
+  enabled: true
   degPerSweepInc: 1
   degAngDown: 0 
-  degAngDelta: 0 
+  degAngDelta: 3 
   numSweepsLevels: 1 
-  maxRange: 50.0 
+  maxRange: 30.0 
   noise: 0 
   offset_x: 0 
-  offset_y: 0 
+  offset_y: -0.1 
   offset_z: 0 
   rot_x: 0
 
@@ -42,5 +41,6 @@ racer_config:
 car_config:
   body_style: 'f1'
   body_rgb: [24, 43, 73]
+  fluid_rgb: false # Want some RGB lighting effect?
   car_name: '#WeRaceAsOne'
   font_size: 50

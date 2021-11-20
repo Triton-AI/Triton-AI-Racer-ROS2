@@ -1,0 +1,6 @@
+/**:
+  ros__parameters:
+    grid_size_m: 0.05
+    max_displacement_m: 0.2
+    max_rotation_deg: 10.0
+    map_block_size_m: 5.0

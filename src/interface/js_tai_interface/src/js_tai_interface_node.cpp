@@ -71,4 +71,4 @@ double JsTaiInterfaceNode::map_steer(const double & js_val, const bool & flipped
 }
 
 #include "rclcpp_components/register_node_macro.hpp"
-RCLCPP_COMPONENTS_REGISTER_NODE(tritonai::interface ::JsTaiInterfaceNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(tritonai::interface::JsTaiInterfaceNode)
