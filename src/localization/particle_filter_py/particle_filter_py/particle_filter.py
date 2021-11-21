@@ -12,7 +12,7 @@ class ParticleFilterConfig:
     max_orientation_change_deg: float = 5.0
     max_position_change_m: float = 2.0
     num_sample: int = 2000
-    reject_match_beyond_m: float = 5.0
+    reject_match_beyond_m: float = 2.0
 
 
 class ParticleFilter:
@@ -68,14 +68,16 @@ class ParticleFilter:
                     range_ratio *= 0.9
                     if range_ratio < 0.001:
                         range_ratio = 0.001
+                    self.position = pos_sample[belief]
+                    self.yaw = yaw_sample[belief]
                 else:
                     range_ratio *= 1.1
                     if range_ratio > 1.0:
                         range_ratio = 1.0
             else:
                 last_min_distance = min_distance
-            self.position = pos_sample[belief]
-            self.yaw = yaw_sample[belief]
+                self.position = pos_sample[belief]
+                self.yaw = yaw_sample[belief]
 
     def quaternion_from_euler(self, roll, pitch, yaw):
         """
@@ -128,11 +130,12 @@ class ParticleFilter:
         distances = np.linalg.norm(samples-features, axis=3)
         best_distances = np.min(distances, axis=2)
         valid_matches = best_distances < self.config.reject_match_beyond_m
+        num_valid_match = np.sum(valid_matches, axis=1)
         ave_distances = np.sum(
-            best_distances, axis=1, where=valid_matches)
-        ave_distances /= np.sum(valid_matches, axis=1) 
+            best_distances, axis=1, where=valid_matches) / np.sum(valid_matches, axis=1) 
         try:
-            min_distance = np.nanargmin(ave_distances)
+            where_most_matches = np.nonzero(num_valid_match == np.max(num_valid_match))
+            where_min_distance = np.nanargmin(ave_distances[where_most_matches])
         except Exception as e:
             return -1, math.inf
-        return min_distance, ave_distances[min_distance]
+        return where_min_distance, ave_distances[where_min_distance]
