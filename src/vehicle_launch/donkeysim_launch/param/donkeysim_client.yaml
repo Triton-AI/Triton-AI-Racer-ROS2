@@ -25,10 +25,10 @@ lidar_config:
   degAngDown: 0 
   degAngDelta: 3 
   numSweepsLevels: 1 
-  maxRange: 30.0 
+  maxRange: 100.0 
   noise: 0 
   offset_x: 0 
-  offset_y: -0.1 
+  offset_y: 0.5
   offset_z: 0 
   rot_x: 0
 
@@ -42,5 +42,5 @@ car_config:
   body_style: 'f1'
   body_rgb: [24, 43, 73]
   fluid_rgb: false # Want some RGB lighting effect?
-  car_name: '#WeRaceAsOne'
+  car_name: 'Safety Car'
   font_size: 50

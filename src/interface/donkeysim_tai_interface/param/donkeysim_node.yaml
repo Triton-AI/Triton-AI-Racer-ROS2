@@ -3,3 +3,9 @@
     client_config_pkg: 'donkeysim_tai_interface'
     client_config_file: 'param/donkeysim_client.yaml'
     send_control_interval_ms: 50
+
+    # When true, the node will publish pose in odometry differently.
+    # The node now subscribes to an external pose message "pose_estimate",
+    # and add IMU dead reckoning to it.
+    simulate_real_odometry: false 
+    

@@ -7,11 +7,13 @@ import math
 import ctypes
 import multiprocessing
 from multiprocessing import sharedctypes
+from datetime import timedelta
 
 import numpy as np
 
 import rclpy
 from rclpy.node import Node
+from rclpy.time import Time
 from rclpy.qos import QoSProfile, QoSPresetProfiles
 from ament_index_python.packages import get_package_share_directory
 import cv_bridge
@@ -58,10 +60,18 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         self._odom_pub = self.create_publisher(
             Odometry, 'odom', QoSPresetProfiles.SENSOR_DATA.value)
 
+        self.declare_parameter('simulate_real_odometry', False)
         self.declare_parameter('client_config_pkg', 'donkeysim_tai_interface')
         self.declare_parameter('client_config_file',
                                'param/donkeysim_client.yaml')
         self.declare_parameter('send_control_interval_ms', 0.05)
+
+        self._use_real_odometry = self.get_parameter(
+            'simulate_real_odometry').get_parameter_value().bool_value
+        if self._use_real_odometry:
+            self._estimated_pos_sub = self.create_subscription(
+                PoseWithCovarianceStamped, "pose_estimate", self._pose_estimate_callback, QoSPresetProfiles.SENSOR_DATA.value)
+            self._estimated_pose = None
 
         client_config_file = os.path.join(
             get_package_share_directory(self.get_parameter(
@@ -89,7 +99,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
     def image_callback(self, img):
         img_msg = self.bridge.cv2_to_imgmsg(img[..., ::-1])
-        img_msg.header.frame_id = 'cam_front_link'
+        img_msg.header.frame_id = 'camera_link'
         if self._img_pub:
             self._img_pub.publish(img_msg)
 
@@ -115,7 +125,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
         imu = Imu()
         imu.header.stamp = self.get_clock().now().to_msg()
-        imu.header.frame_id = 'base_link'
+        imu.header.frame_id = 'imu_link'
         imu.linear_acceleration.x = tele.accel_z
         imu.linear_acceleration.y = -tele.accel_x
         imu.linear_acceleration.z = tele.accel_y
@@ -125,7 +135,17 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         odom = Odometry()
         odom.header.stamp = self.get_clock().now().to_msg()
         odom.header.frame_id = 'base_link'
-        odom.pose = pose.pose
+        if self._use_real_odometry:
+            if self._estimated_pose is not None:
+                time_delta = self.get_clock().now() - Time.from_msg(self._estimated_pose.header.stamp)
+                time_delta_s = time_delta.nanoseconds / 1e9
+                # TODO add IMU dead reckoning
+                odom.pose = self._estimated_pose.pose
+            else:
+                self.get_logger().warning("Pose estimation not received. Odometry will include ground truth pose.")
+                odom.pose = pose.pose
+        else:
+            odom.pose = pose.pose
         odom.twist.twist.linear.x = tele.vel_z
         odom.twist.twist.linear.y = -tele.vel_x
         odom.twist.twist.linear.z = tele.vel_y
@@ -170,6 +190,9 @@ class DonkeysimClientNode(Node, TelemetryInterface):
             p.map(process_lidar_point, self.lidar_list)
         lidar_msg.data = np.ctypeslib.as_array(LIDAR_DATA).flatten().tobytes()
         self._lidar_pub.publish(lidar_msg)
+
+    def _pose_estimate_callback(self, msg: PoseWithCovarianceStamped):
+        self._estimated_pose = msg
 
     def quaternion_from_euler(self, roll, pitch, yaw):
         """
