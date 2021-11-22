@@ -10,10 +10,10 @@ import math
 class ParticleFilterConfig:
     initial_position: tuple
     initial_orientation_deg: float
-    max_orientation_change_deg: float = 2.0
-    max_position_change_m: float = 2.0
+    max_orientation_change_deg: float = 1.0
+    max_position_change_m: float = 1.0
     num_sample: int = 300
-    reject_match_beyond_m: float = 15.0
+    reject_match_beyond_m: float = 10.0
 
 
 class ParticleFilter:
@@ -60,12 +60,14 @@ class ParticleFilter:
                 if range_ratio > 1.0:
                     range_ratio = 1.0
                 self.sensor_input_event.clear()
-            pos_sample, yaw_sample = self._sample(self.pos_range * range_ratio, self.yaw_range * range_ratio)
+            pos_sample, yaw_sample = self._sample(
+                self.pos_range * range_ratio, self.yaw_range * range_ratio)
             pos_sample += np.expand_dims(self.position, axis=0)
             yaw_sample += self.yaw
             feature_transformed = self._transform(
                 self.features, pos_sample, yaw_sample)
-            belief, best_score = self._evaluate_feature_match(sensor_input, feature_transformed)
+            belief, best_score, best_match = self._evaluate_feature_match(
+                sensor_input, feature_transformed)
             if last_best_score is not None:
                 if best_score > last_best_score:
                     last_best_score = best_score
@@ -110,8 +112,10 @@ class ParticleFilter:
     def _sample(self, pos_range, yaw_range):
         pos_x = np.random.normal(0, pos_range / 2, self.config.num_sample)
         pos_y = np.random.normal(0, pos_range / 2, self.config.num_sample)
-        pos = np.hstack([pos_x[:, np.newaxis], pos_y[:, np.newaxis]]).astype(np.float32)
-        yaw = np.random.normal(0, yaw_range / 2, self.config.num_sample).astype(np.float32)
+        pos = np.hstack(
+            [pos_x[:, np.newaxis], pos_y[:, np.newaxis]]).astype(np.float32)
+        yaw = np.random.normal(
+            0, yaw_range / 2, self.config.num_sample).astype(np.float32)
         return pos, yaw
 
     def _transform(self, to_transform: np.ndarray, pos_offsets: np.ndarray, yaw_offsets: np.ndarray):
@@ -132,23 +136,14 @@ class ParticleFilter:
 
     def _evaluate_feature_match(self, samples: np.ndarray, features: np.ndarray):
         # samples: num_sample * sample_length * 2
-        samples = samples[np.newaxis, :, np.newaxis, :]
-        features = features[:, np.newaxis, :, :]
+        samples = samples[np.newaxis, np.newaxis, :, :]
+        features = features[:, :, np.newaxis, :]
         # num_sample * feature_length * sample_length * 2
         distances = np.linalg.norm(samples-features, axis=3)
-        best_distances = np.min(distances, axis=2)
+        where_best_distances = np.argmin(distances, axis=2)
+        best_distances = np.squeeze(np.take_along_axis(
+            distances, where_best_distances[..., np.newaxis], axis=-1))
         valid_matches = best_distances < self.config.reject_match_beyond_m
         scores = np.sum(1 / best_distances, axis=1, where=valid_matches)
         best_sample = np.nanargmax(scores)
-        return best_sample, scores[best_sample]
-        # valid_matches = best_distances < self.config.reject_match_beyond_m
-        # num_valid_match = np.sum(valid_matches, axis=1)
-        # ave_distances = np.sum(
-        #     best_distances, axis=1, where=valid_matches) / np.sum(valid_matches, axis=1) 
-        # try:
-        #     where_most_matches, = np.nonzero(num_valid_match == np.max(num_valid_match))
-        #     where_min_distance = where_most_matches[np.nanargmin(ave_distances[where_most_matches])]
-        # except Exception as e:
-        #     return -1, math.inf
-        # return where_min_distance, ave_distances[where_min_distance]
-
+        return best_sample, scores[best_sample], where_best_distances[best_sample]

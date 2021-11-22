@@ -28,7 +28,7 @@ from .donkeysim_client import LidarConfig, TelemetryPack, GymInterface, Telemetr
 
 LIDAR_CONFIG = None
 LIDAR_DATA = None
-
+MAP_ORIGIN=[16.5, -18.0]
 
 def process_lidar_point(lidar_point: dict):
     dist = lidar_point['d']
@@ -110,12 +110,12 @@ class DonkeysimClientNode(Node, TelemetryInterface):
     def telemetry_callback(self, tele: TelemetryPack):
         pose = PoseWithCovarianceStamped()
         pose.header.stamp = self.get_clock().now().to_msg()
-        pose.header.frame_id = 'base_link'
-        pose.pose.pose.position.x = tele.pos_z
-        pose.pose.pose.position.y = -tele.pos_x
+        pose.header.frame_id = 'map'
+        pose.pose.pose.position.x = tele.pos_x - MAP_ORIGIN[0]
+        pose.pose.pose.position.y = tele.pos_z - MAP_ORIGIN[1]
         pose.pose.pose.position.z = tele.pos_y
         w, x, y, z = self.quaternion_from_euler(
-            tele.roll * math.pi / 180, tele.pitch * math.pi / 180, (360.0 - tele.yaw) * math.pi / 180)
+            math.radians(tele.roll), math.radians(tele.pitch), math.radians(90 - tele.yaw))
         pose.pose.pose.orientation.x = x
         pose.pose.pose.orientation.y = y
         pose.pose.pose.orientation.z = z

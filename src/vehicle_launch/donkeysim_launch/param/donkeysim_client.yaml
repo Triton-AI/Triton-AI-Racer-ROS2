@@ -1,6 +1,6 @@
 sim_config:
   scene_name: 'circuit_launch'
-  host: 'TRITON-AI-PC-1.local'
+  host: '192.168.0.114'
   port: 9091
   artificial_latency: 0
 
@@ -25,7 +25,7 @@ lidar_config:
   degAngDown: 0 
   degAngDelta: 3 
   numSweepsLevels: 1 
-  maxRange: 100.0 
+  maxRange: 50.0 
   noise: 0 
   offset_x: 0 
   offset_y: 0.5
