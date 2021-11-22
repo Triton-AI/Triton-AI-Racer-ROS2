@@ -5,6 +5,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSPresetProfiles
 from sensor_msgs.msg import PointCloud2
 from geometry_msgs.msg import PoseWithCovarianceStamped, TransformStamped
+from visualization_msgs.msg import Marker, MarkerArray
 from tai_interface.msg import FloatArray
 from particle_filter import ParticleFilter, ParticleFilterConfig
 from tf2_ros import TransformBroadcaster
@@ -13,13 +14,13 @@ FEATURE_POINTS = np.array([
     [-51.587, 49.8],
     [7.059, 26.322],
     [-31.534, 15.743],
-    [-46.468, 12.922],
     [-19.183, 4.6049],
     [-52.915, -1.8627],
     [17.499, -6.5173]
 ], dtype=np.float32)
+FEATURE_POINTS = FEATURE_POINTS + 100
 
-INITIAL_POS = (0.0, 0.0)
+INITIAL_POS = (102.0, 102.0)
 INITIAL_YAW = 180.0
 
 
@@ -32,6 +33,7 @@ class ParticleFilterNode(Node):
 
         self.pose_pub_ = self.create_publisher(
             PoseWithCovarianceStamped, "pose_estimate", QoSPresetProfiles.SYSTEM_DEFAULT.value)
+        self.marker_array_pub_ = self.create_publisher(MarkerArray, "features", QoSPresetProfiles.SYSTEM_DEFAULT.value)
         self.pc_sub_ = self.create_subscription(
             PointCloud2, "lidar", self.pc_callback_, QoSPresetProfiles.SENSOR_DATA.value)
         self.br_ = TransformBroadcaster(self)
@@ -78,6 +80,30 @@ class ParticleFilterNode(Node):
         t.transform.rotation.y = orientation[2]
         t.transform.rotation.z = orientation[3]
         self.br_.sendTransform(t)
+
+        marker_msg = MarkerArray()
+        for i in range(len(FEATURE_POINTS)):
+            marker = Marker()
+            marker.header.frame_id = "map"
+            marker.header.stamp = self.get_clock().now().to_msg()
+            marker.type = Marker.SPHERE
+            marker.ns = "feature"
+            marker.id = i
+            marker.action = Marker.MODIFY
+            marker.pose.position.x = float(FEATURE_POINTS[i, 0])
+            marker.pose.position.y = float(FEATURE_POINTS[i, 1])
+            marker.pose.position.z = 0.0
+            marker.scale.x = 1.0
+            marker.scale.y = 1.0
+            marker.scale.z = 1.0
+            marker.color.r = 0.0
+            marker.color.g = 1.0
+            marker.color.b = 0.0
+            marker.color.a = 1.0
+            marker_msg.markers.append(marker)
+        self.marker_array_pub_.publish(marker_msg)
+            
+
 
 
 def main(args=None):

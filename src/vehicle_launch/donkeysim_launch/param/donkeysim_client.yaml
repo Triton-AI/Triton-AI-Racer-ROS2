@@ -1,6 +1,6 @@
 sim_config:
   scene_name: 'circuit_launch'
-  host: '127.0.0.1'
+  host: 'TRITON-AI-PC-1.local'
   port: 9091
   artificial_latency: 0
 

@@ -134,12 +134,14 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
         odom = Odometry()
         odom.header.stamp = self.get_clock().now().to_msg()
-        odom.header.frame_id = 'base_link'
+        odom.header.frame_id = 'map'
+        odom.child_frame_id = 'base_link'
         if self._use_real_odometry:
             if self._estimated_pose is not None:
                 time_delta = self.get_clock().now() - Time.from_msg(self._estimated_pose.header.stamp)
                 time_delta_s = time_delta.nanoseconds / 1e9
                 # TODO add IMU dead reckoning
+                
                 odom.pose = self._estimated_pose.pose
             else:
                 self.get_logger().warning("Pose estimation not received. Odometry will include ground truth pose.")
@@ -215,6 +217,50 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
         return q
 
+    def euler_from_quaternion(self, quaternion):
+        """
+        Converts quaternion (w in last place) to euler roll, pitch, yaw
+        quaternion = [x, y, z, w]
+        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+        """
+        x = quaternion.x
+        y = quaternion.y
+        z = quaternion.z
+        w = quaternion.w
+
+        sinr_cosp = 2 * (w * x + y * z)
+        cosr_cosp = 1 - 2 * (x * x + y * y)
+        roll = np.arctan2(sinr_cosp, cosr_cosp)
+
+        sinp = 2 * (w * y - z * x)
+        pitch = np.arcsin(sinp)
+
+        siny_cosp = 2 * (w * z + x * y)
+        cosy_cosp = 1 - 2 * (y * y + z * z)
+        yaw = np.arctan2(siny_cosp, cosy_cosp)
+
+        return roll, pitch, yaw
+
+    def dead_reckoning_(self, pose:PoseWithCovarianceStamped, displacement, yaw_rotation):
+        x, y, _ = displacement
+        _, _, yaw = self.euler_from_quaternion(pose.pose.pose.orientation)
+        yaw_inverted = -yaw
+        rotation_matrix = np.array([
+            [np.cos(yaw_inverted), -np.sin(yaw_inverted)],
+            [np.sin(yaw_inverted), np.cos(yaw_inverted)]
+        ])
+        rotated_displacement = np.array([x, y]) @ rotation_matrix
+        pose.pose.pose.position.x += rotated_displacement[0]
+        pose.pose.pose.position.y += rotated_displacement[1]
+        yaw += yaw_rotation
+        q = self.quaternion_from_euler(0.0, 0.0, yaw)
+        pose.pose.pose.orientation.w = q[0]
+        pose.pose.pose.orientation.x = q[1]
+        pose.pose.pose.orientation.y = q[2]
+        pose.pose.pose.orientation.z = q[3]
+        return pose
+
+        
 
 def polar2cart(r, theta, phi):
     theta = math.radians(theta)
