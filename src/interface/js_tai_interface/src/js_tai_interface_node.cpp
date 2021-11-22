@@ -44,14 +44,14 @@ JsTaiInterfaceNode::JsTaiInterfaceNode(const rclcpp::NodeOptions & options)
 void JsTaiInterfaceNode::jsCallback(const Joy::SharedPtr joy)
 {
   auto ctl_msg = VehicleControl();
-  ctl_msg.stamp = now();
-  ctl_msg.throttle.throttle = map_paddel(
+  ctl_msg.header.stamp = now();
+  ctl_msg.throttle = map_paddel(
     joy->axes[js_config_.axis_trigger_throttle],
     js_config_.throttle_flipped);
-  ctl_msg.brake.brake = map_paddel(
+  ctl_msg.brake = map_paddel(
     joy->axes[js_config_.axis_trigger_brake],
     js_config_.brake_flipped);
-  ctl_msg.steering_openloop.steer = map_steer(
+  ctl_msg.steering_openloop = map_steer(
     joy->axes[js_config_.axis_stick_steering],
     js_config_.steering_flipped);
   ctl_pub_->publish(ctl_msg);

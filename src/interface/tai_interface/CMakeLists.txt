@@ -21,12 +21,9 @@ if(BUILD_TESTING)
 endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/Brake.msg"
   "msg/RaceFlag.msg"
   "msg/RaceStage.msg"
   "msg/RaceState.msg"
-  "msg/Steer.msg"
-  "msg/Throttle.msg"
   "msg/VehicleControl.msg"
   "msg/VehicleOperationMode.msg"
   "srv/EStop.srv"

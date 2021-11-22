@@ -13,9 +13,9 @@ namespace lgsvl_tai
     void LGSVLSender::tai_callback(const VehicleControl::SharedPtr tai_cmd)
     {
         auto lgsvl_cmd = VehicleControlData();
-        lgsvl_cmd.acceleration_pct = tai_cmd->throttle.throttle;
-        lgsvl_cmd.braking_pct = tai_cmd->brake.brake;
-        lgsvl_cmd.target_wheel_angle = tai_cmd->steering_rad.steer;
+        lgsvl_cmd.acceleration_pct = tai_cmd->throttle;
+        lgsvl_cmd.braking_pct = tai_cmd->brake;
+        lgsvl_cmd.target_wheel_angle = tai_cmd->steering_rad;
         lgsvl_cmd.target_wheel_angular_rate = wheel_angle_rate;
         lgsvl_cmd_pub_->publish(lgsvl_cmd);
     }

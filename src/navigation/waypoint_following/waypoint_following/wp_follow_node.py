@@ -79,12 +79,12 @@ class WaypointFollowerNode(Node):
     def send_control(self, steering, throttle):
         msg = VehicleControl()
         if throttle > 0:
-            msg.throttle.throttle = throttle
+            msg.throttle = throttle
         else:
-            msg.brake.brake = -throttle
+            msg.brake = -throttle
         steering_val = self.map_steering(steering)
-        msg.steering_openloop.steer = steering_val
-        msg.steering_rad.steer = steering_val
+        msg.steering_openloop = steering_val
+        msg.steering_rad = steering_val
         self.control_pub_.publish(msg)
 
     def map_steering(self, steering):

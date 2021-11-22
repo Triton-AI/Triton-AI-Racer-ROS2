@@ -2,9 +2,6 @@
 #define raptor_tai_interface_HPP_
 
 #include <rclcpp/rclcpp.hpp>
-#include "tai_interface/msg/brake.hpp"
-#include "tai_interface/msg/throttle.hpp"
-#include "tai_interface/msg/steer.hpp"
 #include "tai_interface/msg/vehicle_control.hpp"
 
 #include "raptor_dbw_msgs/msg/accelerator_pedal_cmd.hpp"
@@ -18,9 +15,6 @@ namespace raptor_tai
     using raptor_dbw_msgs::msg::AcceleratorPedalCmd;
     using raptor_dbw_msgs::msg::BrakeCmd;
     using raptor_dbw_msgs::msg::SteeringCmd;
-    using tai_interface::msg::Brake;
-    using tai_interface::msg::Steer;
-    using tai_interface::msg::Throttle;
     using tai_interface::msg::VehicleControl;
 
     class RaptorTaiInterface : public rclcpp::Node
