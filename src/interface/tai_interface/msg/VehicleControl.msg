@@ -1,15 +1,18 @@
-builtin_interfaces/Time stamp
+std_msgs/Header header
 
-tai_interface/Throttle throttle 
-# [0, 100] throttle paddle percentage
+float32 throttle 
+# [0, 1] throttle paddle percentage
 
-tai_interface/Brake brake 
+float32 brake 
 # [0, 100] brake paddle percentage
 
-tai_interface/Steer steering_openloop
-# [-1, 1] open-loop steering where negative is left
-#         and positive is right
+float32 target_velocity
+# Alternative to throttle and brake, set the velocity.
 
-tai_interface/Steer steering_rad 
-#[-pi, pi] close-loop steering where negative is left 
-#          and positive is right
+float32 steering_openloop
+# [-1, 1] open-loop steering where positive is left
+#         and negative is right
+
+float32 steering_rad 
+#[-pi, pi] close-loop steering where positive is left 
+#          and negative is right

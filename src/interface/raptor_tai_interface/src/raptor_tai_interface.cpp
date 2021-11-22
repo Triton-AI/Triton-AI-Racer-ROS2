@@ -47,49 +47,28 @@ namespace raptor_tai
     void RaptorTaiInterface::tai_callback(const VehicleControl::SharedPtr tai_cmd)
     {
         auto throttle_msg = AcceleratorPedalCmd();
-        throttle_msg.pedal_cmd = tai_cmd->throttle.throttle;
+        throttle_msg.pedal_cmd = tai_cmd->throttle;
         throttle_msg.enable = true;
         raptor_throttle_pub_->publish(throttle_msg);
 
         auto steer_msg = SteeringCmd();
-        steer_msg.angle_cmd = tai_cmd->steering_rad.steer;
+        steer_msg.angle_cmd = tai_cmd->steering_rad;
         steer_msg.enable = true;
         raptor_steer_pub_->publish(steer_msg);
 
         auto brake_msg = BrakeCmd();
-        brake_msg.pedal_cmd = tai_cmd->brake.brake;
+        brake_msg.pedal_cmd = tai_cmd->brake;
         steer_msg.enable = true;
         raptor_brake_pub_->publish(brake_msg);
-    }
-
-    void RaptorTaiInterface::raptor_throttle_callback(const AcceleratorPedalCmd::SharedPtr raptor_throttle)
-    {
-        std::lock_guard<std::mutex> guard(raptor_mutex);
-        this->raptor_throttle = raptor_throttle;
-        tai_watchdog_triggered[0] = false;
-    }
-
-    void RaptorTaiInterface::raptor_steer_callback(const SteeringCmd::SharedPtr raptor_steer)
-    {
-        std::lock_guard<std::mutex> guard(raptor_mutex);
-        this->raptor_steer = raptor_steer;
-        tai_watchdog_triggered[1] = false;
-    }
-
-    void RaptorTaiInterface::raptor_brake_callback(const BrakeCmd::SharedPtr raptor_brake)
-    {
-        std::lock_guard<std::mutex> guard(raptor_mutex);
-        this->raptor_brake = raptor_brake;
-        tai_watchdog_triggered[2] = false;
     }
 
     void RaptorTaiInterface::raptor_to_tai_timer_callback()
     {
         std::lock_guard<std::mutex> guard(raptor_mutex);
         VehicleControl tai_cmd = VehicleControl();
-        tai_cmd.throttle.throttle = raptor_throttle->pedal_cmd;
-        tai_cmd.steering_rad.steer = raptor_steer->angle_cmd;
-        tai_cmd.brake.brake = raptor_brake->pedal_cmd;
+        tai_cmd.throttle = raptor_throttle->pedal_cmd;
+        tai_cmd.steering_rad = raptor_steer->angle_cmd;
+        tai_cmd.brake = raptor_brake->pedal_cmd;
         tai_cmd_pub_->publish(tai_cmd);
     }
 

@@ -134,9 +134,9 @@ class DonkeysimClientNode(Node, TelemetryInterface):
 
     def _vehicle_control_callback(self, msg: VehicleControl):
         if self.gym_interface.car_loaded:
-            self.steer = msg.steering_openloop.steer
-            self.throttle = msg.throttle.throttle
-            self.brake = msg.brake.brake
+            self.steer = msg.steering_openloop
+            self.throttle = msg.throttle
+            self.brake = msg.brake
 
     def _control_timer_callback(self):
         self.gym_interface.send_controls(self.steer, self.throttle, self.brake)
