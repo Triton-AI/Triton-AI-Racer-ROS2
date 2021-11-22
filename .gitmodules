@@ -4,9 +4,3 @@
 [submodule "src/external/vesc"]
 	path = src/external/vesc
 	url = git@github.com:f1tenth/vesc.git
-[submodule "src/external/nmea_navsat_driver"]
-	path = src/external/nmea_navsat_driver
-	url = git@github.com:ros-drivers/nmea_navsat_driver.git
-[submodule "src/external/bluespace_ai_xsens_ros_mti_driver"]
-	path = src/external/bluespace_ai_xsens_ros_mti_driver
-	url = git@github.com:bluespace-ai/bluespace_ai_xsens_ros_mti_driver.git
