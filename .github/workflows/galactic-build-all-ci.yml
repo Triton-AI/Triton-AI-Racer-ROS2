@@ -4,6 +4,7 @@ on: [push]
 jobs:
   build-ros2:
     runs-on: ubuntu-latest
+    continue-on-error: true
     container:
       image: ros:galactic
     steps:
