@@ -1,0 +1,29 @@
+name: ROS2 CI Workflow
+
+on: [push]
+jobs:
+  build-ros2:
+    runs-on: ubuntu-latest
+    container:
+      image: ros:galactic
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Install Dependencies
+        run: |
+          bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash; \
+          apt-get update && rosdep update; \
+          cd Triton-AI-Racer-ROS2; \
+          rosdep install --from-paths src --ignore-src -y'
+      - name: Build Workspace
+        run: |
+          bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash; \
+          cd Triton-AI-Racer-ROS2; \
+          colcon build --event-handlers console_cohesion+'
+      - name: Run Tests
+        run: |
+          bash -c 'source /opt/ros/$ROS_DISTRO/setup.bash; \
+          colcon test --event-handlers console_cohesion+; \
+          colcon test-result --verbose'
