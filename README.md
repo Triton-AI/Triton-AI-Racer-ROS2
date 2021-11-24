@@ -12,7 +12,7 @@ Core repo for the unified Triton AI Racer platform for autonomous race vehicles 
 
 ### Education
 
-- [Triton AI Racer Drive-By-Wire Platform]()
+- [Triton AI Racer Vehicle Interface Platform](doc/tai_platform_note.md)
 - [Using Triton AI Racer for Your Project]()
 
 ### Racing
