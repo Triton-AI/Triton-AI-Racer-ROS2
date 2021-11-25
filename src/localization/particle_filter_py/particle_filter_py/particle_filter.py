@@ -63,28 +63,18 @@ class ParticleFilter:
             pos_sample, yaw_sample = self._sample(
                 self.pos_range * range_ratio, self.yaw_range * range_ratio)
             pos_sample += np.expand_dims(self.position, axis=0)
+            pos_sample = np.append(pos_sample, self.position[np.newaxis, :], axis=0)
+            yaw_sample = np.append(yaw_sample, self.yaw)
             yaw_sample += self.yaw
             feature_transformed = self._transform(
                 self.features, pos_sample, yaw_sample)
             belief, best_score, best_match = self._evaluate_feature_match(
                 sensor_input, feature_transformed)
-            if last_best_score is not None:
-                if best_score > last_best_score:
-                    last_best_score = best_score
-                    range_ratio *= 0.9
-                    if range_ratio < 0.1:
-                        range_ratio = 0.1
-                    self.position = pos_sample[belief]
-                    self.yaw = yaw_sample[belief]
-                else:
-                    range_ratio *= 1.1
-                    if range_ratio > 1.0:
-                        range_ratio = 1.0
-                    pass
-            else:
-                last_best_score = best_score
-                self.position = pos_sample[belief]
-                self.yaw = yaw_sample[belief]
+
+            new_pos = np.vstack([pos_sample[belief], self.position])
+            new_yaw = np.vstack([yaw_sample[belief], self.yaw])
+            self.position = np.average(new_pos, axis=0)
+            self.yaw = np.average(new_yaw)
             # duration = datetime.now() - start
             # self.debug_callback(str(duration))
 
