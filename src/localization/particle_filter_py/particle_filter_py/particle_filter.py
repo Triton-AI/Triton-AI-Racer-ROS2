@@ -10,7 +10,7 @@ import math
 class ParticleFilterConfig:
     initial_position: tuple
     initial_orientation_deg: float
-    max_orientation_change_deg: float = 1.0
+    max_orientation_change_deg: float = 10.0
     max_position_change_m: float = 1.0
     num_sample: int = 300
     reject_match_beyond_m: float = 10.0
@@ -44,7 +44,6 @@ class ParticleFilter:
 
     def mcl_thread_(self):
         range_ratio = 1.0
-        last_best_score = None
         while True:
             # start = datetime.now()
             if self.sensor_input is None:
@@ -54,18 +53,14 @@ class ParticleFilter:
             sensor_input = self.sensor_input.copy()
             self.sensor_input_lock.release()
             if self.sensor_input_event.is_set():
-                range_ratio *= 1.1
-                if last_best_score is not None:
-                    last_best_score *= 0.5
-                if range_ratio > 1.0:
-                    range_ratio = 1.0
+                pass
                 self.sensor_input_event.clear()
             pos_sample, yaw_sample = self._sample(
                 self.pos_range * range_ratio, self.yaw_range * range_ratio)
             pos_sample += np.expand_dims(self.position, axis=0)
             pos_sample = np.append(pos_sample, self.position[np.newaxis, :], axis=0)
-            yaw_sample = np.append(yaw_sample, self.yaw)
             yaw_sample += self.yaw
+            yaw_sample = np.append(yaw_sample, self.yaw)
             feature_transformed = self._transform(
                 self.features, pos_sample, yaw_sample)
             belief, best_score, best_match = self._evaluate_feature_match(
@@ -75,6 +70,10 @@ class ParticleFilter:
             new_yaw = np.vstack([yaw_sample[belief], self.yaw])
             self.position = np.average(new_pos, axis=0)
             self.yaw = np.average(new_yaw)
+            if self.yaw > 2 * np.pi:
+                self.yaw -= 2 * np.pi
+            elif self.yaw < 0:
+                self.yaw += 2*np.pi
             # duration = datetime.now() - start
             # self.debug_callback(str(duration))
 
@@ -134,6 +133,6 @@ class ParticleFilter:
         best_distances = np.squeeze(np.take_along_axis(
             distances, where_best_distances[..., np.newaxis], axis=-1))
         valid_matches = best_distances < self.config.reject_match_beyond_m
-        scores = np.sum(1 / best_distances, axis=1, where=valid_matches)
+        scores = np.sum(np.clip(1 / best_distances, 0.0, len(self.features)), axis=1, where=valid_matches)
         best_sample = np.nanargmax(scores)
         return best_sample, scores[best_sample], where_best_distances[best_sample]
