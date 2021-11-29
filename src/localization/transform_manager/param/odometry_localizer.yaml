@@ -1,0 +1,3 @@
+/**:
+  ros__parameters:
+    use_magnetometer: false # If true, heading is the orientation value provided by IMU. If false, the node dead-reckons with angular velocity

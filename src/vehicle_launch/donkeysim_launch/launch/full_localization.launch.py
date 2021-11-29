@@ -10,7 +10,7 @@ def generate_launch_description():
     config = os.path.join(
         get_package_share_directory('donkeysim_launch'),
         'param',
-        'mcl.yaml'
+        'full_localization.yaml'
     )
     urdf_path = os.path.join(
         get_package_share_directory('donkeysim_launch'),
@@ -49,10 +49,30 @@ def generate_launch_description():
             ]
         ),
 
+        # Node(
+        #     package='particle_filter_py',
+        #     executable='particle_filter_py_node',
+        #     name='particle_filter_py_node',
+        #     parameters=[
+        #         config
+        #     ]
+        # ),
+
         Node(
-            package='particle_filter_py',
-            executable='particle_filter_py_node',
-            name='particle_filter_py_node',
+            package='odometry_localizer',
+            executable='odometry_localizer_node',
+            name='odometry_localizer_node',
+            output='screen',
+            parameters=[
+                config
+            ]
+        ),
+
+        Node(
+            package='transform_manager',
+            executable='transform_manager_node',
+            name='transform_manager_node',
+            output='screen',
             parameters=[
                 config
             ]

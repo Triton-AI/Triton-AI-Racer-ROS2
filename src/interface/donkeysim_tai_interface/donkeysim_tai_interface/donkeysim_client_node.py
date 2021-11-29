@@ -56,9 +56,9 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         self._imu_pub = self.create_publisher(
             Imu, 'imu/raw', QoSPresetProfiles.SENSOR_DATA.value)
         self._pose_pub = self.create_publisher(
-            PoseWithCovarianceStamped, 'pose', QoSPresetProfiles.SENSOR_DATA.value)
+            PoseWithCovarianceStamped, 'pose', 10)
         self._odom_pub = self.create_publisher(
-            Odometry, 'odom', QoSPresetProfiles.SENSOR_DATA.value)
+            Odometry, 'odom', 10)
 
         self.declare_parameter('simulate_real_odometry', False)
         self.declare_parameter('client_config_pkg', 'donkeysim_tai_interface')
@@ -70,7 +70,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
             'simulate_real_odometry').get_parameter_value().bool_value
         if self._use_real_odometry:
             self._estimated_pos_sub = self.create_subscription(
-                PoseWithCovarianceStamped, "pose_estimate", self._pose_estimate_callback, QoSPresetProfiles.SENSOR_DATA.value)
+                PoseWithCovarianceStamped, "pose_estimate", self._pose_estimate_callback, 10)
             self._estimated_pose = None
 
         client_config_file = os.path.join(
@@ -114,8 +114,20 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         pose.pose.pose.position.x = tele.pos_x - MAP_ORIGIN[0]
         pose.pose.pose.position.y = tele.pos_z - MAP_ORIGIN[1]
         pose.pose.pose.position.z = tele.pos_y
+        tele.yaw = 90 - tele.yaw
+        if tele.yaw < -180:
+            tele.yaw += 360
+        tele.roll = -tele.roll
+        if tele.roll < -180:
+            tele.roll += 360
+        if tele.pitch > 180:
+            tele.pitch -= 360
+
         w, x, y, z = self.quaternion_from_euler(
-            math.radians(tele.roll), math.radians(tele.pitch), math.radians(90 - tele.yaw))
+            math.radians(tele.roll), math.radians(tele.pitch), math.radians(tele.yaw))
+
+        #self.get_logger().info(f"{tele.roll}, {tele.pitch}, {tele.yaw}")
+        #self.get_logger().info(f"{w}, {x}, {y}, {z}")
         pose.pose.pose.orientation.x = x
         pose.pose.pose.orientation.y = y
         pose.pose.pose.orientation.z = z
@@ -129,6 +141,7 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         imu.linear_acceleration.x = tele.accel_z
         imu.linear_acceleration.y = -tele.accel_x
         imu.linear_acceleration.z = tele.accel_y
+        imu.orientation = pose.pose.pose.orientation
         if self._imu_pub:
             self._imu_pub.publish(imu)
 
@@ -208,13 +221,11 @@ class DonkeysimClientNode(Node, TelemetryInterface):
         sp = math.sin(pitch * 0.5)
         cr = math.cos(roll * 0.5)
         sr = math.sin(roll * 0.5)
-
         q = [0] * 4
         q[0] = cy * cp * cr + sy * sp * sr
         q[1] = cy * cp * sr - sy * sp * cr
         q[2] = sy * cp * sr + cy * sp * cr
         q[3] = sy * cp * cr - cy * sp * sr
-
         return q
 
     def euler_from_quaternion(self, quaternion):
